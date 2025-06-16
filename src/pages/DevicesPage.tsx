@@ -13,26 +13,30 @@ interface DeviceInfo {
   connected: boolean;
 }
 
-// DeviceStatus接口设计用于提供更丰富的设备状态信息
-// 包括：驱动状态、设备就绪状态、推荐编程语言、支持的语言列表等
-// 后端已完全实现相关功能，前端可在后续开发中使用
-/*
+// DeviceStatus接口 - 提供完整的设备状态信息
 interface DeviceStatus {
   device_info: DeviceInfo;
   driver_status?: {
     installed: boolean;
-    driver_info?: any;
+    driver_info?: {
+      name: string;
+      version?: string;
+      description?: string;
+      download_url?: string;
+      install_guide?: string;
+    };
   };
   ready: boolean;
   recommended_language?: string;
   supported_languages: string[];
 }
-*/
 
 const DevicesPage: React.FC = () => {
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
+  const [deviceStatuses, setDeviceStatuses] = useState<Map<string, DeviceStatus>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
 
   const scanDevices = async () => {
     setLoading(true);
@@ -43,6 +47,20 @@ const DevicesPage: React.FC = () => {
       const result = await invoke<DeviceInfo[]>('scan_devices');
       console.log('扫描结果:', result);
       setDevices(result);
+      
+      // 获取每个设备的详细状态
+      const statusMap = new Map<string, DeviceStatus>();
+      for (const device of result) {
+        try {
+          const status = await invoke<DeviceStatus>('get_device_status', { deviceId: device.id });
+          if (status) {
+            statusMap.set(device.id, status);
+          }
+        } catch (err) {
+          console.warn(`获取设备 ${device.id} 状态失败:`, err);
+        }
+      }
+      setDeviceStatuses(statusMap);
       
       if (result.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
@@ -57,13 +75,52 @@ const DevicesPage: React.FC = () => {
 
   const connectDevice = async (deviceId: string) => {
     try {
-      await invoke('connect_device', { deviceId });
+      await invoke('connect_serial', { deviceId });
       console.log('设备连接成功');
-      // 重新扫描更新状态
-      await scanDevices();
+      setSelectedDevice(deviceId);
+      // 重新获取设备状态
+      await refreshDeviceStatus(deviceId);
     } catch (err) {
       console.error('连接设备失败:', err);
       setError(`连接设备失败: ${err}`);
+    }
+  };
+
+  const disconnectDevice = async (deviceId: string) => {
+    try {
+      await invoke('disconnect_serial', { deviceId });
+      console.log('设备断开连接');
+      if (selectedDevice === deviceId) {
+        setSelectedDevice(null);
+      }
+      await refreshDeviceStatus(deviceId);
+    } catch (err) {
+      console.error('断开设备失败:', err);
+      setError(`断开设备失败: ${err}`);
+    }
+  };
+
+  const installDriver = async (deviceId: string) => {
+    try {
+      setError(null);
+      const result = await invoke<string>('install_device_driver', { deviceId });
+      console.log('驱动安装结果:', result);
+      // 重新获取设备状态
+      await refreshDeviceStatus(deviceId);
+    } catch (err) {
+      console.error('安装驱动失败:', err);
+      setError(`安装驱动失败: ${err}`);
+    }
+  };
+
+  const refreshDeviceStatus = async (deviceId: string) => {
+    try {
+      const status = await invoke<DeviceStatus>('get_device_status', { deviceId });
+      if (status) {
+        setDeviceStatuses(prev => new Map(prev.set(deviceId, status)));
+      }
+    } catch (err) {
+      console.warn(`刷新设备状态失败:`, err);
     }
   };
 
@@ -152,56 +209,216 @@ const DevicesPage: React.FC = () => {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
-              {devices.map((device) => (
-                <div key={device.id} style={{
-                  border: '1px solid #e8e8e8',
-                  borderRadius: 8,
-                  padding: 16,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 24 }}>
-                      {getDeviceTypeIcon(device.device_type)}
-                    </span>
-                    <div>
-                      <h4 style={{ 
-                        margin: 0, 
-                        color: getDeviceTypeColor(device.device_type) 
+              {devices.map((device) => {
+                const status = deviceStatuses.get(device.id);
+                const isConnected = selectedDevice === device.id;
+                const isReady = status?.ready || false;
+                const driverInstalled = status?.driver_status?.installed || false;
+                
+                return (
+                  <div key={device.id} style={{
+                    border: `2px solid ${isReady ? '#52c41a' : driverInstalled ? '#faad14' : '#ff4d4f'}`,
+                    borderRadius: 12,
+                    padding: 20,
+                    background: isConnected ? '#f6ffed' : 'white'
+                  }}>
+                    {/* 设备基本信息 */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <span style={{ fontSize: 32 }}>
+                          {getDeviceTypeIcon(device.device_type)}
+                        </span>
+                        <div>
+                          <h3 style={{ 
+                            margin: 0, 
+                            color: getDeviceTypeColor(device.device_type),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8
+                          }}>
+                            {device.name}
+                            {isReady && <span style={{ color: '#52c41a', fontSize: 16 }}>✅</span>}
+                            {!isReady && driverInstalled && <span style={{ color: '#faad14', fontSize: 16 }}>⚠️</span>}
+                            {!driverInstalled && <span style={{ color: '#ff4d4f', fontSize: 16 }}>❌</span>}
+                          </h3>
+                          <p style={{ margin: '4px 0', color: '#8c8c8c', fontSize: 14 }}>
+                            端口: {device.port}
+                            {device.manufacturer && ` • 制造商: ${device.manufacturer}`}
+                          </p>
+                          {device.vendor_id && device.product_id && (
+                            <p style={{ margin: 0, color: '#8c8c8c', fontSize: 12 }}>
+                              VID: 0x{device.vendor_id.toString(16).toUpperCase().padStart(4, '0')} • 
+                              PID: 0x{device.product_id.toString(16).toUpperCase().padStart(4, '0')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* 状态指示器 */}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ 
+                          background: isReady ? '#52c41a' : driverInstalled ? '#faad14' : '#ff4d4f',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 12,
+                          marginBottom: 4
+                        }}>
+                          {isReady ? '✅ 就绪' : driverInstalled ? '⚠️ 需要配置' : '❌ 需要驱动'}
+                        </div>
+                        {isConnected && (
+                          <div style={{ 
+                            background: '#1890ff',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            fontSize: 10
+                          }}>
+                            🔗 已连接
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 驱动状态信息 */}
+                    {status?.driver_status && (
+                      <div style={{ 
+                        background: '#f5f5f5', 
+                        padding: 12, 
+                        borderRadius: 6, 
+                        marginBottom: 12,
+                        fontSize: 12
                       }}>
-                        {device.name}
-                      </h4>
-                      <p style={{ margin: 0, color: '#8c8c8c', fontSize: 12 }}>
-                        端口: {device.port}
-                        {device.manufacturer && ` • 制造商: ${device.manufacturer}`}
-                      </p>
-                      {device.vendor_id && device.product_id && (
-                        <p style={{ margin: 0, color: '#8c8c8c', fontSize: 10 }}>
-                          VID: 0x{device.vendor_id.toString(16).toUpperCase().padStart(4, '0')} • 
-                          PID: 0x{device.product_id.toString(16).toUpperCase().padStart(4, '0')}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span>🔧 驱动状态:</span>
+                          <span style={{ 
+                            color: status.driver_status.installed ? '#52c41a' : '#ff4d4f',
+                            fontWeight: 'bold'
+                          }}>
+                            {status.driver_status.installed ? '已安装' : '未安装'}
+                          </span>
+                        </div>
+                        {status.driver_status.driver_info && (
+                          <div style={{ color: '#666', marginLeft: 20 }}>
+                            驱动: {status.driver_status.driver_info.name}
+                            {status.driver_status.driver_info.version && 
+                              ` (${status.driver_status.driver_info.version})`
+                            }
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 编程语言支持 */}
+                    {status && (
+                      <div style={{ 
+                        background: '#f0f9ff', 
+                        padding: 12, 
+                        borderRadius: 6, 
+                        marginBottom: 12,
+                        fontSize: 12
+                      }}>
+                        <div style={{ marginBottom: 4 }}>
+                          <span>💻 推荐语言: </span>
+                          <span style={{ 
+                            background: '#1890ff', 
+                            color: 'white', 
+                            padding: '2px 6px', 
+                            borderRadius: 3,
+                            fontSize: 10
+                          }}>
+                            {status.recommended_language || 'Arduino'}
+                          </span>
+                        </div>
+                        <div>
+                          <span>🔧 支持语言: </span>
+                                                     {status.supported_languages.map((lang) => (
+                            <span key={lang} style={{ 
+                              background: '#e6f7ff', 
+                              color: '#1890ff', 
+                              padding: '1px 4px', 
+                              borderRadius: 2,
+                              fontSize: 10,
+                              marginRight: 4
+                            }}>
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 操作按钮 */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {!driverInstalled && (
+                        <button
+                          onClick={() => installDriver(device.id)}
+                          style={{
+                            background: '#ff4d4f',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            fontSize: 12
+                          }}
+                        >
+                          🔧 安装驱动
+                        </button>
                       )}
+                      
+                      {driverInstalled && !isConnected && (
+                        <button
+                          onClick={() => connectDevice(device.id)}
+                          style={{
+                            background: '#1890ff',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            fontSize: 12
+                          }}
+                        >
+                          🔗 连接设备
+                        </button>
+                      )}
+                      
+                      {isConnected && (
+                        <button
+                          onClick={() => disconnectDevice(device.id)}
+                          style={{
+                            background: '#52c41a',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            fontSize: 12
+                          }}
+                        >
+                          🔌 断开连接
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => refreshDeviceStatus(device.id)}
+                        style={{
+                          background: '#8c8c8c',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          fontSize: 12
+                        }}
+                      >
+                        🔄 刷新状态
+                      </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={() => connectDevice(device.id)}
-                      style={{
-                        background: device.connected ? '#52c41a' : '#1890ff',
-                        color: 'white',
-                        border: 'none',
-                        padding: '4px 12px',
-                        borderRadius: 4,
-                        cursor: 'pointer',
-                        fontSize: 12
-                      }}
-                    >
-                      {device.connected ? '✅ 已连接' : '🔗 连接'}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
