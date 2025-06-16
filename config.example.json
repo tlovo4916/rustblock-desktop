@@ -1,0 +1,46 @@
+{
+  "ai": {
+    "api_key": "your-deepseek-api-key-here",
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-chat",
+    "temperature": 0.7,
+    "max_tokens": 2000
+  },
+  "devices": {
+    "default_baud_rate": 9600,
+    "scan_interval_ms": 5000,
+    "supported_devices": [
+      {
+        "name": "Arduino Uno",
+        "vendor_id": "0x2341",
+        "product_id": "0x0043",
+        "board_type": "arduino:avr:uno",
+        "language": "arduino"
+      },
+      {
+        "name": "micro:bit",
+        "vendor_id": "0x0d28",
+        "product_id": "0x0204",
+        "board_type": "microbit",
+        "language": "micropython"
+      },
+      {
+        "name": "ESP32",
+        "vendor_id": "0x10c4",
+        "product_id": "0xea60",
+        "board_type": "esp32:esp32:esp32",
+        "language": "arduino"
+      }
+    ]
+  },
+  "editor": {
+    "autosave_interval_ms": 30000,
+    "theme": "light",
+    "language": "zh-CN",
+    "block_style": "friendly"
+  },
+  "project": {
+    "max_recent_projects": 10,
+    "default_project_location": "~/RustBlock/projects"
+  }
+} 

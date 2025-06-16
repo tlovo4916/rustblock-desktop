@@ -1,0 +1,55 @@
+[package]
+name = "rustblock-desktop"
+version = "0.0.1"
+description = "RustBlock Desktop - 面向10岁以下小朋友的可视化编程环境"
+authors = ["supiedt Team"]
+repository = "https://github.com/supiedt/rustblock-desktop"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["devtools"] }
+tauri-plugin-shell = "2.0"
+tauri-plugin-dialog = "2.0"
+tauri-plugin-fs = "2.0" 
+tauri-plugin-http = "2.0"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.10"
+reqwest = { version = "0.12", features = ["json"] }
+
+# 串口通信相关依赖
+serialport = "4.3"
+tokio-serial = "5.4"
+
+# 设备管理相关依赖
+usb-ids = "1.2024"
+regex = "1.10"
+
+# AI功能相关依赖 (暂时注释，初始版本先不启用)
+# async-openai = "0.20"
+
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+
+# 系统目录访问
+dirs = "5.0"
+
+# 移除不需要的依赖，简化初始版本
+# async-openai = "0.20"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-window-state = "2.0"
+tauri-plugin-single-instance = "2.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"] 
