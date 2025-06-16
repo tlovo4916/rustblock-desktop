@@ -13,6 +13,10 @@ interface DeviceInfo {
   connected: boolean;
 }
 
+// DeviceStatus接口设计用于提供更丰富的设备状态信息
+// 包括：驱动状态、设备就绪状态、推荐编程语言、支持的语言列表等
+// 后端已完全实现相关功能，前端可在后续开发中使用
+/*
 interface DeviceStatus {
   device_info: DeviceInfo;
   driver_status?: {
@@ -23,6 +27,7 @@ interface DeviceStatus {
   recommended_language?: string;
   supported_languages: string[];
 }
+*/
 
 const DevicesPage: React.FC = () => {
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
