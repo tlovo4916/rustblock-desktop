@@ -1,0 +1,146 @@
+{
+  "device_settings": {
+    "scan_interval_ms": 3000,
+    "auto_detect_drivers": true,
+    "auto_install_tools": false,
+    "supported_devices": [
+      {
+        "name": "Arduino Uno",
+        "vendor_id": "0x2341",
+        "product_id": "0x0043",
+        "driver": "arduino_usb",
+        "default_baud_rate": 9600,
+        "supported_languages": ["arduino"]
+      },
+      {
+        "name": "Arduino Nano (CH340)",
+        "vendor_id": "0x1a86",
+        "product_id": "0x7523",
+        "driver": "ch340",
+        "default_baud_rate": 9600,
+        "supported_languages": ["arduino"]
+      },
+      {
+        "name": "ESP32 Dev Module",
+        "vendor_id": "0x10c4",
+        "product_id": "0xea60",
+        "driver": "cp210x",
+        "default_baud_rate": 115200,
+        "supported_languages": ["arduino", "micropython"]
+      },
+      {
+        "name": "BBC micro:bit",
+        "vendor_id": "0x0d28",
+        "product_id": "0x0204",
+        "driver": "microbit_usb",
+        "default_baud_rate": 115200,
+        "supported_languages": ["micropython"]
+      },
+      {
+        "name": "Raspberry Pi Pico",
+        "vendor_id": "0x2e8a",
+        "product_id": "0x0005",
+        "driver": "pico_usb",
+        "default_baud_rate": 115200,
+        "supported_languages": ["micropython", "arduino"]
+      }
+    ]
+  },
+  "upload_tools": {
+    "arduino": {
+      "primary": "arduino-cli",
+      "alternative": "platformio",
+      "required_packages": [
+        "arduino:avr",
+        "esp32:esp32"
+      ],
+      "libraries": [
+        "WiFi",
+        "Servo",
+        "LiquidCrystal"
+      ]
+    },
+    "micropython": {
+      "primary": "mpremote",
+      "alternatives": ["ampy", "rshell"],
+      "python_packages": [
+        "mpremote",
+        "adafruit-ampy",
+        "rshell"
+      ]
+    }
+  },
+  "serial_settings": {
+    "default_timeout_ms": 1000,
+    "read_buffer_size": 1024,
+    "auto_reconnect": true,
+    "common_baud_rates": [9600, 115200, 57600, 38400, 19200]
+  },
+  "driver_sources": {
+    "ch340": {
+      "windows": "http://www.wch.cn/downloads/CH341SER_ZIP.html",
+      "macos": "http://www.wch.cn/downloads/CH341SER_MAC_ZIP.html",
+      "linux": "内核内置驱动"
+    },
+    "cp210x": {
+      "windows": "https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers",
+      "macos": "https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers",
+      "linux": "内核内置驱动"
+    },
+    "arduino_usb": {
+      "windows": "随Arduino IDE安装",
+      "macos": "系统自动识别",
+      "linux": "内核内置驱动"
+    }
+  },
+  "installation_commands": {
+    "arduino-cli": {
+      "windows": "winget install ArduinoSA.ArduinoCLI",
+      "macos": "brew install arduino-cli",
+      "linux": "curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh"
+    },
+    "platformio": {
+      "all": "pip install platformio"
+    },
+    "mpremote": {
+      "all": "pip install mpremote"
+    },
+    "ampy": {
+      "all": "pip install adafruit-ampy"
+    },
+    "rshell": {
+      "all": "pip install rshell"
+    }
+  },
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "设备未被识别",
+        "solutions": [
+          "检查USB连接线是否正常",
+          "安装相应的驱动程序",
+          "尝试不同的USB端口",
+          "检查设备管理器中的设备状态"
+        ]
+      },
+      {
+        "issue": "代码上传失败",
+        "solutions": [
+          "确认选择了正确的开发板类型",
+          "检查串口是否被其他程序占用",
+          "尝试按下设备的复位按钮",
+          "检查代码语法是否正确"
+        ]
+      },
+      {
+        "issue": "串口通信失败",
+        "solutions": [
+          "确认波特率设置正确",
+          "检查串口权限（Linux/macOS）",
+          "尝试重启应用程序",
+          "检查防火墙设置"
+        ]
+      }
+    ]
+  }
+} 

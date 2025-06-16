@@ -40,6 +40,9 @@ regex = "1.10"
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }
 
+# 加密和哈希
+sha2 = "0.10"
+
 # 系统目录访问
 dirs = "5.0"
 

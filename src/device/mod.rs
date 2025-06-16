@@ -1,11 +1,12 @@
 pub mod detector;
 pub mod serial;
 pub mod uploader;
+pub mod driver;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, Hash, PartialEq)]
 pub enum DeviceType {
     Arduino,
     MicroBit,
@@ -55,16 +56,17 @@ impl DeviceInfo {
     
     fn detect_device_type(vendor_id: Option<u16>, product_id: Option<u16>) -> DeviceType {
         match (vendor_id, product_id) {
-            // Arduino Uno
+            // Arduino Uno (官方)
             (Some(0x2341), Some(0x0043)) => DeviceType::Arduino,
             (Some(0x2341), Some(0x0001)) => DeviceType::Arduino,
-            // Arduino Nano
+            // Arduino Nano (CH340芯片)
             (Some(0x1a86), Some(0x7523)) => DeviceType::Arduino,
             // micro:bit
             (Some(0x0d28), Some(0x0204)) => DeviceType::MicroBit,
-            // ESP32
+            // ESP32 (CP210x芯片)
             (Some(0x10c4), Some(0xea60)) => DeviceType::ESP32,
-            (Some(0x1a86), Some(0x7523)) => DeviceType::ESP32,
+            // ESP32 (其他芯片)
+            (Some(0x303a), Some(0x1001)) => DeviceType::ESP32,
             // Raspberry Pi Pico
             (Some(0x2e8a), Some(0x0005)) => DeviceType::RaspberryPiPico,
             (Some(0x2e8a), Some(0x000a)) => DeviceType::RaspberryPiPico,
