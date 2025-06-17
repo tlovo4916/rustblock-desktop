@@ -211,9 +211,26 @@ impl DriverManager {
 
     /// 根据设备VID/PID获取所需驱动
     pub fn get_required_driver(&self, vendor_id: u16, product_id: u16) -> Option<&DriverInfo> {
-        self.drivers.values().find(|driver| {
+        debug!("查找驱动: VID:0x{:04x}, PID:0x{:04x}", vendor_id, product_id);
+        
+        let result = self.drivers.values().find(|driver| {
             driver.vendor_id == vendor_id && driver.product_id == product_id
-        })
+        });
+        
+        match result {
+            Some(driver) => {
+                debug!("找到匹配的驱动: {}", driver.name);
+                Some(driver)
+            },
+            None => {
+                debug!("未找到匹配的驱动，支持的VID/PID组合：");
+                for (key, driver) in &self.drivers {
+                    debug!("  {} - VID:0x{:04x}, PID:0x{:04x}", 
+                           key, driver.vendor_id, driver.product_id);
+                }
+                None
+            }
+        }
     }
 
     /// 检查特定设备是否有可用驱动
@@ -370,15 +387,108 @@ impl DriverManager {
     async fn install_windows_driver(&mut self, driver_name: &str) -> Result<String> {
         match driver_name {
             "ch340" => {
-                Ok("Windows通常会自动安装CH340驱动。如果需要手动安装，请从制造商网站下载。".to_string())
+                info!("开始安装CH340驱动...");
+                
+                // 尝试使用Windows Update安装驱动
+                let pnputil_result = tokio::process::Command::new("pnputil")
+                    .args(&["/scan-devices"])
+                    .output()
+                    .await;
+                    
+                if pnputil_result.is_ok() {
+                    info!("触发Windows自动驱动扫描");
+                    
+                    // 等待一下，然后重新扫描驱动状态
+                    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+                    let _ = self.scan_windows_drivers().await;
+                    
+                    if let Some(driver) = self.drivers.get("ch340") {
+                        if driver.installed {
+                            return Ok("CH340驱动安装成功！".to_string());
+                        }
+                    }
+                }
+                
+                // 如果自动安装失败，尝试下载并安装
+                self.download_and_install_ch340_driver().await
             },
             "arduino_usb" => {
-                Ok("Arduino驱动通常随Arduino IDE一起安装。".to_string())
+                info!("开始安装Arduino驱动...");
+                
+                // 检查是否已安装Arduino IDE
+                let arduino_path_result = tokio::process::Command::new("where")
+                    .args(&["arduino"])
+                    .output()
+                    .await;
+                    
+                if arduino_path_result.is_ok() {
+                    Ok("Arduino驱动已随Arduino IDE安装。".to_string())
+                } else {
+                    Ok("建议安装Arduino IDE以获得完整的驱动支持：https://www.arduino.cc/en/software".to_string())
+                }
+            },
+            "cp210x" => {
+                info!("开始安装CP210x驱动...");
+                
+                // 触发Windows设备扫描
+                let pnputil_result = tokio::process::Command::new("pnputil")
+                    .args(&["/scan-devices"])
+                    .output()
+                    .await;
+                    
+                if pnputil_result.is_ok() {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+                    let _ = self.scan_windows_drivers().await;
+                    
+                    if let Some(driver) = self.drivers.get("cp210x") {
+                        if driver.installed {
+                            return Ok("CP210x驱动安装成功！".to_string());
+                        }
+                    }
+                }
+                
+                Ok("Windows会自动安装CP210x驱动。如果仍有问题，请从Silicon Labs官网下载：https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers".to_string())
             },
             _ => {
                 Ok("请手动从设备制造商网站下载并安装相应驱动程序。".to_string())
             }
         }
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn download_and_install_ch340_driver(&mut self) -> Result<String> {
+        use std::path::Path;
+        
+        info!("尝试下载并安装CH340驱动...");
+        
+        // 创建临时目录
+        let temp_dir = std::env::temp_dir().join("rustblock_drivers");
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(&temp_dir)?;
+        }
+        
+        // CH340驱动下载URL（这是一个示例，实际应该使用官方下载链接）
+        let driver_url = "http://www.wch.cn/downloads/CH341SER_EXE.html";
+        
+        // 这里应该实现实际的下载和安装逻辑
+        // 由于自动下载驱动涉及安全考虑，我们提供详细的手动安装指南
+        
+        let install_guide = format!(
+                         "CH340驱动安装指南：\n\
+              1. 打开浏览器访问：{}\n\
+              2. 下载CH341SER.EXE驱动程序\n\
+              3. 以管理员身份运行下载的驱动程序\n\
+              4. 重新连接设备并刷新状态\n\
+              \n\
+              或者，您可以让Windows自动安装：\n\
+              1. 连接设备到电脑\n\
+              2. 打开设备管理器\n\
+              3. 找到未知设备，右键选择\"更新驱动程序\"\n\
+              4. 选择\"自动搜索驱动程序\"",
+            driver_url
+        );
+        
+        Ok(install_guide)
     }
 
     #[cfg(target_os = "macos")]

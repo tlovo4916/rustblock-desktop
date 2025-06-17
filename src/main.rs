@@ -55,6 +55,8 @@ async fn main() {
             commands::device::send_serial_data,
             commands::device::read_serial_data,
             commands::device::get_connected_ports,
+            commands::device::refresh_device_status,
+            commands::device::refresh_all_devices,
             // AI命令
             commands::ai::chat_with_ai,
             commands::ai::analyze_code,

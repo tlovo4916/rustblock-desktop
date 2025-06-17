@@ -339,4 +339,46 @@ pub async fn get_connected_ports(
 ) -> Result<Vec<String>, String> {
     let manager = serial_manager.lock().await;
     Ok(manager.connected_ports().into_iter().map(|s| s.to_string()).collect())
+}
+
+#[command]
+pub async fn refresh_device_status(
+    device_id: String,
+    detector: State<'_, DeviceDetectorState>
+) -> Result<Option<DeviceStatus>, String> {
+    info!("刷新设备状态: {}", device_id);
+    
+    let mut detector = detector.lock().await;
+    
+    // 重新检查驱动状态
+    detector.check_device_drivers().await.map_err(|e| {
+        error!("刷新驱动状态失败: {}", e);
+        format!("刷新驱动状态失败: {}", e)
+    })?;
+    
+    // 获取更新后的设备状态
+    Ok(detector.get_device_status(&device_id))
+}
+
+#[command]
+pub async fn refresh_all_devices(
+    detector: State<'_, DeviceDetectorState>
+) -> Result<Vec<DeviceInfo>, String> {
+    info!("刷新所有设备状态");
+    
+    let mut detector = detector.lock().await;
+    
+    // 重新扫描所有设备
+    let devices = detector.scan_devices().map_err(|e| {
+        error!("重新扫描设备失败: {}", e);
+        format!("重新扫描设备失败: {}", e)
+    })?;
+    
+    // 重新检查驱动状态
+    detector.check_device_drivers().await.map_err(|e| {
+        error!("检查驱动状态失败: {}", e);
+        format!("检查驱动状态失败: {}", e)
+    })?;
+    
+    Ok(devices)
 } 

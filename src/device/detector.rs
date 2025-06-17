@@ -48,7 +48,14 @@ impl DeviceDetector {
                 device_info.description = usb_info.product.clone();
             }
 
-            info!("检测到设备: {} (类型: {:?})", device_info.name, device_info.device_type);
+            // 记录设备详细信息用于调试
+            if let (Some(vid), Some(pid)) = (device_info.vendor_id, device_info.product_id) {
+                info!("检测到设备: {} (类型: {:?}) - VID:0x{:04x}, PID:0x{:04x}", 
+                      device_info.name, device_info.device_type, vid, pid);
+            } else {
+                info!("检测到设备: {} (类型: {:?}) - 无VID/PID信息", 
+                      device_info.name, device_info.device_type);
+            }
             
             self.devices.insert(device_info.id.clone(), device_info.clone());
             detected_devices.push(device_info);
@@ -111,7 +118,21 @@ impl DeviceDetector {
     /// 检查设备驱动状态
     pub async fn check_device_drivers(&mut self) -> Result<()> {
         info!("检查设备驱动状态...");
-        let _ = self.driver_manager.scan_installed_drivers().await?;
+        
+        // 重新扫描已安装的驱动程序
+        let installed_drivers = self.driver_manager.scan_installed_drivers().await?;
+        info!("扫描到 {} 个已安装的驱动程序", installed_drivers.len());
+        
+        // 重新扫描设备
+        let devices = self.scan_devices()?;
+        info!("重新扫描设备，发现 {} 个设备", devices.len());
+        
+        // 更新设备列表 - 将Vec转换为HashMap
+        self.devices.clear();
+        for device in devices {
+            self.devices.insert(device.id.clone(), device);
+        }
+        
         Ok(())
     }
 
@@ -129,7 +150,14 @@ impl DeviceDetector {
     /// 安装设备驱动
     pub async fn install_device_driver(&mut self, device_id: &str) -> Result<String> {
         if let Some(device) = self.get_device(device_id) {
+            // 首先检查设备是否已经有驱动
             if let (Some(vid), Some(pid)) = (device.vendor_id, device.product_id) {
+                let (driver_installed, _) = self.driver_manager.check_device_driver(vid, pid);
+                if driver_installed {
+                    return Ok("设备驱动已安装！".to_string());
+                }
+                
+                // 尝试根据VID/PID获取驱动
                 if let Some(driver) = self.driver_manager.get_required_driver(vid, pid) {
                     let driver_name = driver.name.clone();
                     // 获取驱动键名（简化版，实际应该有更好的映射）
@@ -139,13 +167,47 @@ impl DeviceDetector {
                         0x10c4 => "cp210x",
                         0x0d28 => "microbit_usb",
                         0x2e8a => "pico_usb",
-                        _ => return Err(anyhow!("不支持的设备类型")),
+                        _ => return Err(anyhow!("不支持的设备类型：VID:0x{:04x}, PID:0x{:04x}", vid, pid)),
                     };
                     return self.driver_manager.install_driver(driver_key).await;
                 }
             }
+            
+            // 如果没有VID/PID或者找不到匹配的驱动，根据设备类型推断
+            match device.device_type {
+                DeviceType::Arduino => {
+                    // Arduino 设备，尝试安装CH340驱动（最常见）
+                    warn!("设备 {} 没有VID/PID信息，根据设备类型推断安装CH340驱动", device_id);
+                    self.driver_manager.install_driver("ch340").await
+                },
+                DeviceType::ESP32 => {
+                    warn!("设备 {} 没有VID/PID信息，根据设备类型推断安装CP210x驱动", device_id);
+                    self.driver_manager.install_driver("cp210x").await
+                },
+                DeviceType::MicroBit => {
+                    warn!("设备 {} 没有VID/PID信息，根据设备类型推断安装micro:bit驱动", device_id);
+                    self.driver_manager.install_driver("microbit_usb").await
+                },
+                DeviceType::RaspberryPiPico => {
+                    warn!("设备 {} 没有VID/PID信息，根据设备类型推断安装Pico驱动", device_id);
+                    self.driver_manager.install_driver("pico_usb").await
+                },
+                DeviceType::Unknown => {
+                    warn!("设备 {} 类型未知，尝试安装通用串口驱动", device_id);
+                    // 对于未知设备，提供通用的驱动安装建议
+                    Ok(format!(
+                        "设备类型未知，请手动安装驱动：\n\
+                        1. 如果是Arduino设备，请尝试CH340驱动\n\
+                        2. 如果是ESP32设备，请尝试CP210x驱动\n\
+                        3. 或者让Windows自动搜索驱动程序\n\
+                        设备信息：端口={}, 制造商={:?}",
+                        device.port, device.manufacturer
+                    ))
+                }
+            }
+        } else {
+            Err(anyhow!("未找到设备: {}", device_id))
         }
-        Err(anyhow!("未找到设备或驱动信息"))
     }
 
     /// 获取所有可用驱动列表

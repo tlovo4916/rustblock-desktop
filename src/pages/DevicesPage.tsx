@@ -36,7 +36,9 @@ const DevicesPage: React.FC = () => {
   const [deviceStatuses, setDeviceStatuses] = useState<Map<string, DeviceStatus>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+  const [connectedPorts, setConnectedPorts] = useState<string[]>([]);
+  const [driverInstallInfo, setDriverInstallInfo] = useState<string | null>(null);
+  const [showDriverDialog, setShowDriverDialog] = useState(false);
 
   const scanDevices = async () => {
     setLoading(true);
@@ -62,6 +64,9 @@ const DevicesPage: React.FC = () => {
       }
       setDeviceStatuses(statusMap);
       
+      // 更新已连接端口列表
+      await updateConnectedPorts();
+      
       if (result.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
       }
@@ -75,9 +80,35 @@ const DevicesPage: React.FC = () => {
 
   const connectDevice = async (deviceId: string) => {
     try {
-      await invoke('connect_serial', { deviceId });
+      setError(null);
+      console.log('开始连接设备:', deviceId);
+      
+      // 获取设备信息
+      const device = devices.find(d => d.id === deviceId);
+      if (!device) {
+        throw new Error('设备未找到');
+      }
+      
+      // 获取设备状态以确定波特率
+      const status = deviceStatuses.get(deviceId);
+      if (!status?.ready) {
+        throw new Error('设备未就绪，请先安装驱动');
+      }
+      
+      // 根据设备类型确定波特率
+      const baudRate = getBaudRateForDevice(device.device_type);
+      
+      // 连接串口
+      await invoke('connect_serial', { 
+        port: device.port, 
+        baudRate: baudRate 
+      });
+      
       console.log('设备连接成功');
-      setSelectedDevice(deviceId);
+      
+      // 更新已连接端口列表
+      await updateConnectedPorts();
+      
       // 重新获取设备状态
       await refreshDeviceStatus(deviceId);
     } catch (err) {
@@ -88,11 +119,22 @@ const DevicesPage: React.FC = () => {
 
   const disconnectDevice = async (deviceId: string) => {
     try {
-      await invoke('disconnect_serial', { deviceId });
-      console.log('设备断开连接');
-      if (selectedDevice === deviceId) {
-        setSelectedDevice(null);
+      setError(null);
+      console.log('开始断开设备:', deviceId);
+      
+      // 获取设备信息
+      const device = devices.find(d => d.id === deviceId);
+      if (!device) {
+        throw new Error('设备未找到');
       }
+      
+      // 断开串口连接
+      await invoke('disconnect_serial', { port: device.port });
+      console.log('设备断开连接');
+      
+      // 更新已连接端口列表
+      await updateConnectedPorts();
+      
       await refreshDeviceStatus(deviceId);
     } catch (err) {
       console.error('断开设备失败:', err);
@@ -100,27 +142,107 @@ const DevicesPage: React.FC = () => {
     }
   };
 
+  const getBaudRateForDevice = (deviceType: string): number => {
+    switch (deviceType) {
+      case 'Arduino': return 9600;
+      case 'ESP32': return 115200;
+      case 'MicroBit': return 115200;
+      case 'RaspberryPiPico': return 115200;
+      default: return 9600;
+    }
+  };
+
+  const updateConnectedPorts = async () => {
+    try {
+      const ports = await invoke<string[]>('get_connected_ports');
+      setConnectedPorts(ports);
+    } catch (err) {
+      console.warn('获取已连接端口列表失败:', err);
+    }
+  };
+
+  const isDeviceConnected = (device: DeviceInfo): boolean => {
+    return connectedPorts.includes(device.port);
+  };
+
   const installDriver = async (deviceId: string) => {
     try {
       setError(null);
+      console.log('开始安装驱动:', deviceId);
+      
+      // 显示安装提示
       const result = await invoke<string>('install_device_driver', { deviceId });
       console.log('驱动安装结果:', result);
-      // 重新获取设备状态
-      await refreshDeviceStatus(deviceId);
+      
+      // 显示安装结果
+      setDriverInstallInfo(result);
+      setShowDriverDialog(true);
+      
+      if (result.includes('成功')) {
+        // 安装成功，刷新状态
+        setTimeout(async () => {
+          await refreshDeviceStatus(deviceId);
+        }, 1000);
+      }
     } catch (err) {
       console.error('安装驱动失败:', err);
-      setError(`安装驱动失败: ${err}`);
+      setDriverInstallInfo(`安装驱动失败: ${err}`);
+      setShowDriverDialog(true);
     }
   };
 
   const refreshDeviceStatus = async (deviceId: string) => {
     try {
-      const status = await invoke<DeviceStatus>('get_device_status', { deviceId });
+      setError(null);
+      console.log('刷新设备状态:', deviceId);
+      
+      // 使用新的刷新命令
+      const status = await invoke<DeviceStatus>('refresh_device_status', { deviceId });
       if (status) {
         setDeviceStatuses(prev => new Map(prev.set(deviceId, status)));
+        console.log('设备状态已更新:', status);
       }
     } catch (err) {
-      console.warn(`刷新设备状态失败:`, err);
+      console.error(`刷新设备状态失败:`, err);
+      setError(`刷新设备状态失败: ${err}`);
+    }
+  };
+
+  const refreshAllDevices = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('刷新所有设备...');
+      const result = await invoke<DeviceInfo[]>('refresh_all_devices');
+      console.log('刷新结果:', result);
+      setDevices(result);
+      
+      // 获取每个设备的详细状态
+      const statusMap = new Map<string, DeviceStatus>();
+      for (const device of result) {
+        try {
+          const status = await invoke<DeviceStatus>('get_device_status', { deviceId: device.id });
+          if (status) {
+            statusMap.set(device.id, status);
+          }
+        } catch (err) {
+          console.warn(`获取设备 ${device.id} 状态失败:`, err);
+        }
+      }
+      setDeviceStatuses(statusMap);
+      
+      // 重要：更新已连接端口列表，保持连接状态
+      await updateConnectedPorts();
+      
+      if (result.length === 0) {
+        setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
+      }
+    } catch (err) {
+      console.error('刷新设备失败:', err);
+      setError(`刷新设备失败: ${err}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,6 +296,21 @@ const DevicesPage: React.FC = () => {
             {loading ? '🔄 扫描中...' : '🔍 扫描设备'}
           </button>
           
+          <button 
+            onClick={refreshAllDevices}
+            disabled={loading}
+            style={{
+              background: loading ? '#d9d9d9' : '#52c41a',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 4,
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {loading ? '🔄 刷新中...' : '🔄 刷新所有'}
+          </button>
+          
           {devices.length > 0 && (
             <span style={{ color: '#52c41a', fontSize: 14 }}>
               ✅ 发现 {devices.length} 个设备
@@ -211,7 +348,7 @@ const DevicesPage: React.FC = () => {
             <div style={{ display: 'grid', gap: 16 }}>
               {devices.map((device) => {
                 const status = deviceStatuses.get(device.id);
-                const isConnected = selectedDevice === device.id;
+                const isConnected = isDeviceConnected(device);
                 const isReady = status?.ready || false;
                 const driverInstalled = status?.driver_status?.installed || false;
                 
@@ -388,7 +525,7 @@ const DevicesPage: React.FC = () => {
                         <button
                           onClick={() => disconnectDevice(device.id)}
                           style={{
-                            background: '#52c41a',
+                            background: '#ff7875',
                             color: 'white',
                             border: 'none',
                             padding: '6px 12px',
@@ -404,7 +541,7 @@ const DevicesPage: React.FC = () => {
                       <button
                         onClick={() => refreshDeviceStatus(device.id)}
                         style={{
-                          background: '#8c8c8c',
+                          background: '#722ed1',
                           color: 'white',
                           border: 'none',
                           padding: '6px 12px',
@@ -460,6 +597,64 @@ const DevicesPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* 驱动安装信息对话框 */}
+      {showDriverDialog && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: 24,
+            borderRadius: 8,
+            maxWidth: 500,
+            maxHeight: 400,
+            overflow: 'auto',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ marginTop: 0, color: '#1890ff' }}>🔧 驱动安装信息</h3>
+            <div style={{
+              background: '#f5f5f5',
+              padding: 16,
+              borderRadius: 4,
+              marginBottom: 16,
+              fontFamily: 'monospace',
+              fontSize: 13,
+              lineHeight: 1.6,
+              whiteSpace: 'pre-wrap'
+            }}>
+              {driverInstallInfo}
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <button
+                onClick={() => {
+                  setShowDriverDialog(false);
+                  setDriverInstallInfo(null);
+                }}
+                style={{
+                  background: '#1890ff',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: 4,
+                  cursor: 'pointer'
+                }}
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
