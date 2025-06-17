@@ -1,4 +1,8 @@
 import React from 'react';
+import { Tabs } from 'antd';
+import PerformanceMonitor from '../components/PerformanceMonitor';
+
+const { TabPane } = Tabs;
 
 const SettingsPage: React.FC = () => {
   return (
@@ -10,6 +14,9 @@ const SettingsPage: React.FC = () => {
         borderRadius: 8, 
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
       }}>
+        <Tabs defaultActiveKey="general">
+          <TabPane tab="通用设置" key="general">
+            <div>
         {/* AI配置 */}
         <div style={{ marginBottom: 32 }}>
           <h3>🤖 AI助手配置</h3>
@@ -153,7 +160,13 @@ const SettingsPage: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+            </div>
+          </TabPane>
+          
+          <TabPane tab="性能监控" key="performance">
+            <PerformanceMonitor />
+          </TabPane>
+        </Tabs>
       </div>
     </div>
   );

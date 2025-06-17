@@ -2,6 +2,7 @@ pub mod detector;
 pub mod serial;
 pub mod uploader;
 pub mod driver;
+pub mod connection_manager;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

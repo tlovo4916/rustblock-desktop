@@ -1,3 +1,5 @@
+pub mod enhanced_ai;
+
 use serde::{Deserialize, Serialize};
 use anyhow::{Result, anyhow};
 use reqwest::Client;

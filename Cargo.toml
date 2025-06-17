@@ -46,6 +46,9 @@ sha2 = "0.10"
 # 系统目录访问
 dirs = "5.0"
 
+# UUID生成
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
 # 移除不需要的依赖，简化初始版本
 # async-openai = "0.20"
 

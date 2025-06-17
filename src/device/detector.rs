@@ -1,12 +1,14 @@
-use super::{DeviceInfo, DeviceType, driver::DriverManager};
+use super::{DeviceInfo, DeviceType, driver::DriverManager, connection_manager::ConnectionManager};
 use anyhow::{Result, anyhow};
 use serialport::{SerialPortInfo, SerialPortType};
 use std::collections::HashMap;
 use log::{debug, info, warn};
+use std::sync::Arc;
 
 pub struct DeviceDetector {
     devices: HashMap<String, DeviceInfo>,
     driver_manager: DriverManager,
+    connection_manager: Arc<ConnectionManager>,
 }
 
 impl DeviceDetector {
@@ -14,7 +16,13 @@ impl DeviceDetector {
         Self {
             devices: HashMap::new(),
             driver_manager: DriverManager::new(),
+            connection_manager: Arc::new(ConnectionManager::new()),
         }
+    }
+
+    /// 获取连接管理器的引用
+    pub fn connection_manager(&self) -> Arc<ConnectionManager> {
+        Arc::clone(&self.connection_manager)
     }
 
     /// 扫描所有可用的串口设备

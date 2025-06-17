@@ -1,3 +1,5 @@
+pub mod performance;
+
 use std::path::PathBuf;
 use anyhow::Result;
 
