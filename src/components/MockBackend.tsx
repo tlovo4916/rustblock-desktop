@@ -1,10 +1,10 @@
 // Mock backend for development when Tauri is not available
 export const mockInvoke = async (command: string, args?: any): Promise<any> => {
   console.log(`Mock invoke: ${command}`, args);
-  
+
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-  
+
   switch (command) {
     case 'scan_devices':
       return [
@@ -25,12 +25,12 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
           connected: false,
           vendor_id: 0x0d28,
           product_id: 0x0204,
-        }
+        },
       ];
-      
+
     case 'upload_code':
       return '代码上传成功！';
-      
+
     case 'get_system_status':
       return {
         performance_metrics: {
@@ -61,7 +61,7 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
           cache_size: 16777216,
         },
       };
-      
+
     case 'optimize_performance':
       return {
         garbage_collection: '已执行',
@@ -69,10 +69,10 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
         temp_cleanup: '已清理',
         counters_reset: '已重置',
       };
-      
+
     case 'clear_cache':
       return null;
-      
+
     case 'run_performance_benchmark':
       return {
         cpu_performance: 120 + Math.random() * 50,
@@ -80,14 +80,14 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
         io_performance: 95 + Math.random() * 40,
         cache_performance: 45 + Math.random() * 20,
       };
-      
+
     case 'preload_resources':
       return {
         blockly: true,
         device_drivers: true,
         ai_models: Math.random() > 0.2,
       };
-      
+
     case 'chat_with_ai':
       return {
         message: '你好！我是RustBlock的AI助手，很高兴为你服务！有什么编程问题我可以帮助你吗？',
@@ -95,12 +95,12 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
           prompt_tokens: 20,
           completion_tokens: 30,
           total_tokens: 50,
-        }
+        },
       };
-      
+
     case 'configure_ai_service':
       return null;
-      
+
     case 'get_device_status':
       const deviceId = args?.device_id || args?.deviceId;
       return {
@@ -116,25 +116,25 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
           driver_info: {
             name: 'Arduino USB Driver',
             version: '1.0.0',
-          }
+          },
         },
         ready: true,
         recommended_language: 'arduino',
         supported_languages: ['arduino'],
       };
-      
+
     case 'check_upload_tools':
       return {
         'arduino-cli': Math.random() > 0.3,
-        'platformio': Math.random() > 0.5,
-        'mpremote': Math.random() > 0.4,
-        'ampy': Math.random() > 0.6,
-        'rshell': Math.random() > 0.7,
+        platformio: Math.random() > 0.5,
+        mpremote: Math.random() > 0.4,
+        ampy: Math.random() > 0.6,
+        rshell: Math.random() > 0.7,
       };
-      
+
     case 'install_missing_tools':
       return ['arduino-cli', 'mpremote'];
-      
+
     case 'list_device_profiles':
       return [
         {
@@ -162,14 +162,14 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
           created_at: new Date().toISOString(),
           last_modified: new Date().toISOString(),
           is_favorite: false,
-        }
+        },
       ];
-      
+
     case 'create_device_profile':
     case 'update_device_profile':
     case 'delete_device_profile':
       return null;
-      
+
     case 'export_device_profiles':
       return JSON.stringify({
         profiles: [
@@ -179,16 +179,16 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
             device_type: 'Arduino',
             preferred_language: 'arduino',
             baud_rate: 9600,
-          }
-        ]
+          },
+        ],
       });
-      
+
     case 'import_device_profiles':
       return 2; // 返回导入的配置数量
-      
+
     case 'record_connection_history':
       return null;
-      
+
     case 'read_serial_data':
       // 模拟串口数据
       if (Math.random() > 0.7) {
@@ -203,10 +203,10 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
         return messages[Math.floor(Math.random() * messages.length)];
       }
       return ''; // 大部分时候返回空，模拟无数据
-      
+
     case 'send_serial_data':
       return args?.data?.length || 0; // 返回发送的字节数
-      
+
     default:
       console.warn(`未知的命令: ${command}`);
       return null;
@@ -215,8 +215,7 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
 
 // 检测是否在 Tauri 环境中
 export const isTauriAvailable = (): boolean => {
-  return typeof window !== 'undefined' && 
-         typeof (window as any).__TAURI__ !== 'undefined';
+  return typeof window !== 'undefined' && typeof (window as any).__TAURI__ !== 'undefined';
 };
 
 // 包装 invoke 函数

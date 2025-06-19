@@ -1,10 +1,7 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 
 // 安全的 invoke 包装器
-export async function safeInvoke<T = any>(
-  cmd: string,
-  args?: Record<string, any>
-): Promise<T> {
+export async function safeInvoke<T = any>(cmd: string, args?: Record<string, any>): Promise<T> {
   try {
     // 直接尝试调用，让 Tauri API 自己处理错误
     return await tauriInvoke<T>(cmd, args);

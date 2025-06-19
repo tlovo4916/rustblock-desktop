@@ -13,14 +13,13 @@ interface ChatMessage {
   content: string;
 }
 
-
 const AIPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
       content: '哈喽哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
@@ -70,7 +69,7 @@ const AIPage: React.FC = () => {
     setIsTyping(true);
     setTypingContent('');
     let index = 0;
-    
+
     const typeNext = () => {
       if (index < text.length) {
         setTypingContent(prev => prev + text[index]);
@@ -81,7 +80,7 @@ const AIPage: React.FC = () => {
         onComplete();
       }
     };
-    
+
     typeNext();
   };
 
@@ -97,7 +96,7 @@ const AIPage: React.FC = () => {
     const userMessage: Message = {
       role: 'user',
       content: inputValue,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -110,11 +109,11 @@ const AIPage: React.FC = () => {
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
-          content: '你是编程助手，简洁回答，多用emoji。'
+          content: '你是编程助手，简洁回答，多用emoji。',
         },
         // 只保留最近5条消息历史
         ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: inputValue }
+        { role: 'user', content: inputValue },
       ];
 
       // 通过Tauri后端调用API
@@ -122,18 +121,18 @@ const AIPage: React.FC = () => {
       const response = await safeInvoke<string>('chat_with_deepseek', {
         apiKey,
         apiUrl,
-        messages: chatMessages
+        messages: chatMessages,
       });
 
       setLoading(false);
       setLoadingStatus('');
-      
+
       // 使用打字机效果显示响应
       typeWriterEffect(response, () => {
         const assistantMessage: Message = {
           role: 'assistant',
           content: response,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         setMessages(prev => [...prev, assistantMessage]);
         setTypingContent('');
@@ -163,65 +162,73 @@ const AIPage: React.FC = () => {
         }
       `}</style>
       <h1>AI 编程助手</h1>
-      <div style={{ 
-        background: 'white', 
-        padding: 24, 
-        borderRadius: 8, 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
-      }}>
+      <div
+        style={{
+          background: 'white',
+          padding: 24,
+          borderRadius: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
         <div style={{ display: 'flex', gap: 24, height: 500 }}>
           {/* 聊天界面 */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <h3>💬 与AI助手对话</h3>
-            
+
             {!apiKey && (
-              <div style={{
-                background: '#fff2e8',
-                border: '1px solid #ffbb96',
-                borderRadius: 4,
-                padding: 12,
-                marginBottom: 12,
-                color: '#d46b08'
-              }}>
+              <div
+                style={{
+                  background: '#fff2e8',
+                  border: '1px solid #ffbb96',
+                  borderRadius: 4,
+                  padding: 12,
+                  marginBottom: 12,
+                  color: '#d46b08',
+                }}
+              >
                 ⚠️ 请先在设置页面配置DeepSeek API密钥才能使用AI对话功能
               </div>
             )}
 
-            <div style={{ 
-              flex: 1, 
-              border: '1px solid #d9d9d9', 
-              borderRadius: 8, 
-              padding: 16,
-              background: '#fafafa',
-              marginBottom: 16,
-              overflow: 'auto'
-            }}>
+            <div
+              style={{
+                flex: 1,
+                border: '1px solid #d9d9d9',
+                borderRadius: 8,
+                padding: 16,
+                background: '#fafafa',
+                marginBottom: 16,
+                overflow: 'auto',
+              }}
+            >
               {messages.map((msg, index) => (
                 <div
                   key={index}
                   style={{
                     marginBottom: 16,
                     display: 'flex',
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
                   }}
                 >
-                  <div style={{
-                    background: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
-                    color: msg.role === 'user' ? 'white' : 'black',
-                    padding: 12,
-                    borderRadius: 8,
-                    maxWidth: '80%',
-                    wordBreak: 'break-word'
-                  }}>
+                  <div
+                    style={{
+                      background: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
+                      color: msg.role === 'user' ? 'white' : 'black',
+                      padding: 12,
+                      borderRadius: 8,
+                      maxWidth: '80%',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     <strong>{msg.role === 'user' ? ' ' : ' 🐱 小派:'}</strong>
-                    <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>
-                      {msg.content}
-                    </div>
-                    <div style={{ 
-                      fontSize: 10, 
-                      opacity: 0.7, 
-                      marginTop: 4 
-                    }}>
+                    <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        opacity: 0.7,
+                        marginTop: 4,
+                      }}
+                    >
                       {msg.timestamp.toLocaleTimeString()}
                     </div>
                   </div>
@@ -232,17 +239,19 @@ const AIPage: React.FC = () => {
                   style={{
                     marginBottom: 16,
                     display: 'flex',
-                    justifyContent: 'flex-start'
+                    justifyContent: 'flex-start',
                   }}
                 >
-                  <div style={{
-                    background: '#f0f0f0',
-                    color: 'black',
-                    padding: 12,
-                    borderRadius: 8,
-                    maxWidth: '80%',
-                    wordBreak: 'break-word'
-                  }}>
+                  <div
+                    style={{
+                      background: '#f0f0f0',
+                      color: 'black',
+                      padding: 12,
+                      borderRadius: 8,
+                      maxWidth: '80%',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     <strong>🤖 AI助手:</strong>
                     <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>
                       {typingContent}
@@ -252,50 +261,54 @@ const AIPage: React.FC = () => {
                 </div>
               )}
               {loading && !isTyping && (
-                <div style={{ 
-                  textAlign: 'center', 
-                  color: '#8c8c8c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
-                }}>
-                  <div style={{
-                    width: 16,
-                    height: 16,
-                    border: '2px solid #f3f3f3',
-                    borderTop: '2px solid #1890ff',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
+                <div
+                  style={{
+                    textAlign: 'center',
+                    color: '#8c8c8c',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 16,
+                      height: 16,
+                      border: '2px solid #f3f3f3',
+                      borderTop: '2px solid #1890ff',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                    }}
+                  ></div>
                   {loadingStatus || 'AI正在思考中...'}
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
-            
+
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 style={{
                   flex: 1,
                   padding: 8,
                   border: '1px solid #d9d9d9',
-                  borderRadius: 4
+                  borderRadius: 4,
                 }}
-                placeholder={apiKey ? "给小派提问题吧~" : "请先配置API密钥"}
+                placeholder={apiKey ? '给小派提问题吧~' : '请先配置API密钥'}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={e => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={!apiKey || loading}
               />
-              <button 
+              <button
                 style={{
-                  background: (!apiKey || loading) ? '#d9d9d9' : '#1890ff',
+                  background: !apiKey || loading ? '#d9d9d9' : '#1890ff',
                   color: 'white',
                   border: 'none',
                   padding: '8px 16px',
                   borderRadius: 4,
-                  cursor: (!apiKey || loading) ? 'not-allowed' : 'pointer'
+                  cursor: !apiKey || loading ? 'not-allowed' : 'pointer',
                 }}
                 onClick={sendMessage}
                 disabled={!apiKey || loading}
@@ -315,7 +328,7 @@ const AIPage: React.FC = () => {
                 '什么是循环？',
                 '如何读取按钮状态？',
                 '什么是函数？',
-                '如何使用蜂鸣器？'
+                '如何使用蜂鸣器？',
               ].map(question => (
                 <button
                   key={question}
@@ -325,7 +338,7 @@ const AIPage: React.FC = () => {
                     padding: '8px 12px',
                     borderRadius: 4,
                     cursor: apiKey ? 'pointer' : 'not-allowed',
-                    textAlign: 'left'
+                    textAlign: 'left',
                   }}
                   onClick={() => {
                     if (apiKey) {
@@ -338,14 +351,16 @@ const AIPage: React.FC = () => {
                 </button>
               ))}
             </div>
-            
-            <div style={{ 
-              marginTop: 24, 
-              padding: 16, 
-              background: '#e6f7ff', 
-              borderRadius: 8,
-              fontSize: 12 
-            }}>
+
+            <div
+              style={{
+                marginTop: 24,
+                padding: 16,
+                background: '#e6f7ff',
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+            >
               <strong>💡 提示：</strong>
               <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
                 <li>可以问我任何编程问题</li>

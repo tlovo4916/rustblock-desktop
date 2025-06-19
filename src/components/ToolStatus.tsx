@@ -26,7 +26,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
     setLoading(true);
     try {
       const toolsStatus = await invoke<Record<string, any>>('check_system_tools');
-      
+
       const toolsList: Tool[] = [
         {
           name: 'arduino-cli',
@@ -35,7 +35,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           version: toolsStatus['arduino-cli']?.version,
           required: true,
           description: '用于编译和上传 Arduino 代码',
-          installCommand: 'brew install arduino-cli'
+          installCommand: 'brew install arduino-cli',
         },
         {
           name: 'python3',
@@ -44,7 +44,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           version: toolsStatus['python3']?.version,
           required: true,
           description: '用于 MicroPython 开发',
-          installCommand: 'brew install python3'
+          installCommand: 'brew install python3',
         },
         {
           name: 'mpremote',
@@ -53,7 +53,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           version: toolsStatus['mpremote']?.version,
           required: false,
           description: '用于上传 MicroPython 代码',
-          installCommand: 'pip3 install mpremote'
+          installCommand: 'pip3 install mpremote',
         },
         {
           name: 'esptool',
@@ -62,7 +62,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           version: toolsStatus['esptool']?.version,
           required: false,
           description: '用于 ESP32 固件烧录',
-          installCommand: 'pip3 install esptool'
+          installCommand: 'pip3 install esptool',
         },
         {
           name: 'platformio',
@@ -71,17 +71,15 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           version: toolsStatus['platformio']?.version,
           required: false,
           description: '高级嵌入式开发平台',
-          installCommand: 'pip3 install platformio'
-        }
+          installCommand: 'pip3 install platformio',
+        },
       ];
-      
+
       setTools(toolsList);
-      
+
       // 检查必需工具是否都已安装
-      const allRequiredInstalled = toolsList
-        .filter(t => t.required)
-        .every(t => t.installed);
-      
+      const allRequiredInstalled = toolsList.filter(t => t.required).every(t => t.installed);
+
       if (onToolsReady) {
         onToolsReady(allRequiredInstalled);
       }
@@ -96,10 +94,10 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
   const installTool = async (toolName: string) => {
     setInstalling(toolName);
     try {
-      const result = await invoke<{ success: boolean; message: string }>('install_tool', { 
-        toolName 
+      const result = await invoke<{ success: boolean; message: string }>('install_tool', {
+        toolName,
       });
-      
+
       if (result.success) {
         // 重新检查工具状态
         await checkTools();
@@ -138,13 +136,13 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
             color: 'white',
             border: 'none',
             borderRadius: 4,
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           刷新状态
         </button>
       </div>
-      
+
       <div style={{ display: 'grid', gap: 12 }}>
         {tools.map(tool => (
           <div
@@ -156,7 +154,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: tool.installed ? '#f6ffed' : '#fff2f0'
+              background: tool.installed ? '#f6ffed' : '#fff2f0',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -167,49 +165,53 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
               ) : (
                 <AlertCircle size={24} color="#faad14" />
               )}
-              
+
               <div>
                 <div style={{ fontWeight: 'bold' }}>
                   {tool.displayName}
                   {tool.version && (
-                    <span style={{ 
-                      marginLeft: 8, 
-                      fontSize: 12, 
-                      color: '#666',
-                      fontWeight: 'normal'
-                    }}>
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 12,
+                        color: '#666',
+                        fontWeight: 'normal',
+                      }}
+                    >
                       v{tool.version}
                     </span>
                   )}
                   {tool.required && (
-                    <span style={{
-                      marginLeft: 8,
-                      fontSize: 10,
-                      background: '#ff4d4f',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: 3
-                    }}>
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 10,
+                        background: '#ff4d4f',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: 3,
+                      }}
+                    >
                       必需
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                  {tool.description}
-                </div>
+                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{tool.description}</div>
                 {!tool.installed && tool.installCommand && (
-                  <div style={{ 
-                    fontSize: 11, 
-                    color: '#999', 
-                    marginTop: 4,
-                    fontFamily: 'monospace'
-                  }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: '#999',
+                      marginTop: 4,
+                      fontFamily: 'monospace',
+                    }}
+                  >
                     手动安装: {tool.installCommand}
                   </div>
                 )}
               </div>
             </div>
-            
+
             {!tool.installed && (
               <button
                 onClick={() => installTool(tool.name)}
@@ -223,7 +225,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
                   cursor: installing === tool.name ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4
+                  gap: 4,
                 }}
               >
                 <Download size={14} />
@@ -233,15 +235,17 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
           </div>
         ))}
       </div>
-      
-      <div style={{
-        marginTop: 24,
-        padding: 16,
-        background: '#e6f7ff',
-        borderRadius: 8,
-        fontSize: 12,
-        color: '#1890ff'
-      }}>
+
+      <div
+        style={{
+          marginTop: 24,
+          padding: 16,
+          background: '#e6f7ff',
+          borderRadius: 8,
+          fontSize: 12,
+          color: '#1890ff',
+        }}
+      >
         <strong>提示：</strong>
         <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
           <li>必需工具需要安装才能使用基本功能</li>

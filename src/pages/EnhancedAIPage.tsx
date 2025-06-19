@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { safeInvoke } from '../utils/tauri';
-import { 
-  Card, 
-  Tabs, 
-  Button, 
-  Input, 
-  Select, 
-  Space, 
-  message, 
-  Slider, 
-  Checkbox, 
-  List, 
+import {
+  Card,
+  Tabs,
+  Button,
+  Input,
+  Select,
+  Space,
+  message,
+  Slider,
+  Checkbox,
+  List,
   Tag,
   Modal,
   Tooltip,
-  Alert
+  Alert,
+  Form,
 } from 'antd';
-import { 
-  Brain, 
-  BookOpen, 
-  Code, 
-  Star, 
-  Target, 
+import {
+  Brain,
+  BookOpen,
+  Code,
+  Star,
+  Target,
   Lightbulb,
   Rocket,
   Heart,
-  Trophy
+  Trophy,
 } from 'lucide-react';
 import styled from 'styled-components';
 
@@ -50,8 +51,10 @@ const ContentCard = styled(Card)`
 const FeatureCard = styled(Card)`
   height: 100%;
   border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
@@ -101,22 +104,22 @@ const EnhancedAIPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('optimizer');
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // 代码优化状态
   const [codeToOptimize, setCodeToOptimize] = useState('');
   const [optimizedCode, setOptimizedCode] = useState('');
   const [optimizationSuggestions, setOptimizationSuggestions] = useState<string[]>([]);
-  
+
   // 学习路径状态
   const [studentAge, setStudentAge] = useState(8);
   const [skillLevel, setSkillLevel] = useState('Beginner');
   const [interests, setInterests] = useState<string[]>([]);
   const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
-  
+
   // 项目模板状态
   const [templates, setTemplates] = useState<ProjectTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
-  
+
   // AI配置状态 - 使用统一配置
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
@@ -151,7 +154,6 @@ const EnhancedAIPage: React.FC = () => {
     };
   }, []);
 
-
   const optimizeCode = async () => {
     if (!codeToOptimize.trim()) {
       message.warning('请输入要优化的代码');
@@ -168,18 +170,19 @@ const EnhancedAIPage: React.FC = () => {
       const messages = [
         {
           role: 'system',
-          content: '你是一个专业的代码优化助手，专门帮助优化Arduino/单片机代码。请提供简洁的优化建议和改进后的代码。'
+          content:
+            '你是一个专业的代码优化助手，专门帮助优化Arduino/单片机代码。请提供简洁的优化建议和改进后的代码。',
         },
         {
           role: 'user',
-          content: `请优化以下代码，让它更易读、更符合最佳实践，适合儿童学习：\n\n${codeToOptimize}\n\n请提供：1. 优化后的代码 2. 具体的改进建议`
-        }
+          content: `请优化以下代码，让它更易读、更符合最佳实践，适合儿童学习：\n\n${codeToOptimize}\n\n请提供：1. 优化后的代码 2. 具体的改进建议`,
+        },
       ];
 
       const response = await safeInvoke<string>('chat_with_deepseek', {
         apiKey,
         apiUrl,
-        messages
+        messages,
       });
 
       // 简单解析响应，分离代码和建议
@@ -191,7 +194,7 @@ const EnhancedAIPage: React.FC = () => {
         setOptimizedCode(response);
         setOptimizationSuggestions(['代码已优化']);
       }
-      
+
       message.success('代码优化完成！');
     } catch (error) {
       message.error(`优化失败: ${error}`);
@@ -212,18 +215,18 @@ const EnhancedAIPage: React.FC = () => {
       const messages = [
         {
           role: 'system',
-          content: '你是一个专业的儿童编程教育专家，专门为孩子制定个性化的学习路径。'
+          content: '你是一个专业的儿童编程教育专家，专门为孩子制定个性化的学习路径。',
         },
         {
           role: 'user',
-          content: `请为一个${studentAge}岁的孩子制定编程学习路径，技能水平：${skillLevel}，兴趣：${interestsText}。请提供结构化的学习计划，包括标题、描述、预计时间、难度等级和具体步骤。`
-        }
+          content: `请为一个${studentAge}岁的孩子制定编程学习路径，技能水平：${skillLevel}，兴趣：${interestsText}。请提供结构化的学习计划，包括标题、描述、预计时间、难度等级和具体步骤。`,
+        },
       ];
 
       const response = await safeInvoke<string>('chat_with_deepseek', {
         apiKey,
         apiUrl,
-        messages
+        messages,
       });
 
       // 创建一个简化的学习路径对象
@@ -238,24 +241,24 @@ const EnhancedAIPage: React.FC = () => {
             title: '基础概念学习',
             description: '学习编程基本概念',
             objectives: ['理解变量', '学习循环', '掌握条件语句'],
-            estimated_time: '1周'
+            estimated_time: '1周',
           },
           {
             step_number: 2,
             title: '实践项目',
             description: '通过简单项目练习',
             objectives: ['LED闪烁', '按钮控制', '传感器读取'],
-            estimated_time: '2-3周'
+            estimated_time: '2-3周',
           },
           {
             step_number: 3,
             title: '创意项目',
             description: '独立完成创意作品',
             objectives: ['设计方案', '编写代码', '调试完善'],
-            estimated_time: '1-2周'
-          }
+            estimated_time: '1-2周',
+          },
         ],
-        required_materials: ['Arduino开发板', '面包板', 'LED灯', '按钮', '传感器']
+        required_materials: ['Arduino开发板', '面包板', 'LED灯', '按钮', '传感器'],
       };
 
       setLearningPath(mockLearningPath);
@@ -279,7 +282,7 @@ const EnhancedAIPage: React.FC = () => {
         device_types: ['Arduino'],
         programming_language: 'Arduino C++',
         estimated_time: '30分钟',
-        learning_objectives: ['数字输出', '延时函数', '基本循环']
+        learning_objectives: ['数字输出', '延时函数', '基本循环'],
       },
       {
         id: '2',
@@ -290,7 +293,7 @@ const EnhancedAIPage: React.FC = () => {
         device_types: ['Arduino'],
         programming_language: 'Arduino C++',
         estimated_time: '45分钟',
-        learning_objectives: ['数字输入', '条件判断', 'pullup电阻']
+        learning_objectives: ['数字输入', '条件判断', 'pullup电阻'],
       },
       {
         id: '3',
@@ -301,15 +304,15 @@ const EnhancedAIPage: React.FC = () => {
         device_types: ['Arduino'],
         programming_language: 'Arduino C++',
         estimated_time: '60分钟',
-        learning_objectives: ['模拟输入', '串口通信', '数据处理']
-      }
+        learning_objectives: ['模拟输入', '串口通信', '数据处理'],
+      },
     ];
-    
+
     // 根据年龄筛选合适的模板
-    const ageAppropriate = mockTemplates.filter(template => 
-      studentAge >= template.age_range[0] && studentAge <= template.age_range[1]
+    const ageAppropriate = mockTemplates.filter(
+      template => studentAge >= template.age_range[0] && studentAge <= template.age_range[1]
     );
-    
+
     setTemplates(ageAppropriate);
   };
 
@@ -337,22 +340,29 @@ const EnhancedAIPage: React.FC = () => {
       onOk: async () => {
         // 这里应该获取表单数据并调用生成接口
         message.success('自定义项目创建成功！');
-      }
+      },
     });
   };
 
   const skillLevelColors = {
-    'Beginner': '#52c41a',
-    'Novice': '#1890ff',
-    'Intermediate': '#faad14',
-    'Advanced': '#f5222d'
+    Beginner: '#52c41a',
+    Novice: '#1890ff',
+    Intermediate: '#faad14',
+    Advanced: '#f5222d',
   };
 
   const interestOptions = [
-    '游戏制作', '机器人', '音乐', '艺术', '科学实验', 
-    '运动', '动画', '智能家居', '环保', '太空探索'
+    '游戏制作',
+    '机器人',
+    '音乐',
+    '艺术',
+    '科学实验',
+    '运动',
+    '动画',
+    '智能家居',
+    '环保',
+    '太空探索',
   ];
-
 
   return (
     <PageContainer>
@@ -361,9 +371,7 @@ const EnhancedAIPage: React.FC = () => {
           <Space>
             <Brain size={24} />
             智能编程助手
-            {!isConfigured && (
-              <Tag color="orange">请在设置页配置API</Tag>
-            )}
+            {!isConfigured && <Tag color="orange">请在设置页配置API</Tag>}
           </Space>
         }
       >
@@ -391,12 +399,12 @@ const EnhancedAIPage: React.FC = () => {
               <Card title="输入代码" size="small">
                 <TextArea
                   value={codeToOptimize}
-                  onChange={(e) => setCodeToOptimize(e.target.value)}
+                  onChange={e => setCodeToOptimize(e.target.value)}
                   placeholder="粘贴你的Arduino或MicroPython代码..."
                   style={{ height: 300, marginBottom: 16 }}
                 />
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<Brain size={16} />}
                   onClick={optimizeCode}
                   loading={loading}
@@ -410,14 +418,16 @@ const EnhancedAIPage: React.FC = () => {
               <Card title="优化结果" size="small">
                 {optimizedCode ? (
                   <>
-                    <pre style={{ 
-                      background: '#f5f5f5', 
-                      padding: 12, 
-                      borderRadius: 4,
-                      height: 200,
-                      overflow: 'auto',
-                      fontSize: 12
-                    }}>
+                    <pre
+                      style={{
+                        background: '#f5f5f5',
+                        padding: 12,
+                        borderRadius: 4,
+                        height: 200,
+                        overflow: 'auto',
+                        fontSize: 12,
+                      }}
+                    >
                       {optimizedCode}
                     </pre>
                     <div style={{ marginTop: 16 }}>
@@ -437,13 +447,15 @@ const EnhancedAIPage: React.FC = () => {
                     </div>
                   </>
                 ) : (
-                  <div style={{ 
-                    height: 300, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    color: '#999'
-                  }}>
+                  <div
+                    style={{
+                      height: 300,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#999',
+                    }}
+                  >
                     优化后的代码将显示在这里
                   </div>
                 )}
@@ -464,7 +476,9 @@ const EnhancedAIPage: React.FC = () => {
               <Card title="学生信息" size="small">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>年龄</label>
+                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
+                      年龄
+                    </label>
                     <Slider
                       min={5}
                       max={12}
@@ -475,7 +489,9 @@ const EnhancedAIPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>技能水平</label>
+                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
+                      技能水平
+                    </label>
                     <Select value={skillLevel} onChange={setSkillLevel} style={{ width: '100%' }}>
                       <Option value="Beginner">初学者</Option>
                       <Option value="Novice">新手</Option>
@@ -485,7 +501,9 @@ const EnhancedAIPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>兴趣爱好</label>
+                    <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
+                      兴趣爱好
+                    </label>
                     <Checkbox.Group
                       options={interestOptions}
                       value={interests}
@@ -493,8 +511,8 @@ const EnhancedAIPage: React.FC = () => {
                     />
                   </div>
 
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     icon={<Target size={16} />}
                     onClick={generateLearningPath}
                     loading={loading}
@@ -513,12 +531,10 @@ const EnhancedAIPage: React.FC = () => {
                       <h3>{learningPath.title}</h3>
                       <p>{learningPath.description}</p>
                       <Space>
-                        <Tag color={skillLevelColors[learningPath.difficulty]}>
+                        <Tag color={skillLevelColors[learningPath.difficulty as keyof typeof skillLevelColors]}>
                           {learningPath.difficulty}
                         </Tag>
-                        <Tag icon={<BookOpen size={12} />}>
-                          {learningPath.estimated_time}
-                        </Tag>
+                        <Tag icon={<BookOpen size={12} />}>{learningPath.estimated_time}</Tag>
                       </Space>
                     </div>
 
@@ -529,18 +545,20 @@ const EnhancedAIPage: React.FC = () => {
                         <List.Item>
                           <List.Item.Meta
                             avatar={
-                              <div style={{ 
-                                width: 32, 
-                                height: 32, 
-                                borderRadius: '50%', 
-                                background: '#1890ff',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 14,
-                                fontWeight: 'bold'
-                              }}>
+                              <div
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: '50%',
+                                  background: '#1890ff',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 14,
+                                  fontWeight: 'bold',
+                                }}
+                              >
                                 {step.step_number}
                               </div>
                             }
@@ -550,7 +568,9 @@ const EnhancedAIPage: React.FC = () => {
                                 <p>{step.description}</p>
                                 <Space wrap>
                                   {step.objectives.map((obj, i) => (
-                                    <Tag key={i} color="blue" size="small">{obj}</Tag>
+                                    <Tag key={i} color="blue">
+                                      {obj}
+                                    </Tag>
                                   ))}
                                 </Space>
                               </div>
@@ -564,19 +584,23 @@ const EnhancedAIPage: React.FC = () => {
                       <h4>所需材料：</h4>
                       <Space wrap>
                         {learningPath.required_materials.map((material, index) => (
-                          <Tag key={index} color="green">{material}</Tag>
+                          <Tag key={index} color="green">
+                            {material}
+                          </Tag>
                         ))}
                       </Space>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ 
-                    height: 400, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    color: '#999'
-                  }}>
+                  <div
+                    style={{
+                      height: 400,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#999',
+                    }}
+                  >
                     个性化学习路径将显示在这里
                   </div>
                 )}
@@ -596,8 +620,8 @@ const EnhancedAIPage: React.FC = () => {
             <div style={{ marginBottom: 16 }}>
               <Space>
                 <span>适合 {studentAge} 岁的项目模板：</span>
-                <Button 
-                  type="dashed" 
+                <Button
+                  type="dashed"
                   icon={<Rocket size={16} />}
                   onClick={generateCustomTemplate}
                   disabled={!isConfigured}
@@ -607,12 +631,14 @@ const EnhancedAIPage: React.FC = () => {
               </Space>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-              gap: 16 
-            }}>
-              {templates.map((template) => (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: 16,
+              }}
+            >
+              {templates.map(template => (
                 <FeatureCard
                   key={template.id}
                   title={
@@ -622,24 +648,17 @@ const EnhancedAIPage: React.FC = () => {
                     </Space>
                   }
                   extra={
-                    <Tag color={skillLevelColors[template.difficulty]}>
-                      {template.difficulty}
-                    </Tag>
+                    <Tag color={skillLevelColors[template.difficulty as keyof typeof skillLevelColors]}>{template.difficulty}</Tag>
                   }
                   actions={[
                     <Tooltip title="查看详情">
-                      <Button 
-                        type="link" 
-                        onClick={() => setSelectedTemplate(template)}
-                      >
+                      <Button type="link" onClick={() => setSelectedTemplate(template)}>
                         详情
                       </Button>
                     </Tooltip>,
                     <Tooltip title="使用模板">
-                      <Button type="link">
-                        使用
-                      </Button>
-                    </Tooltip>
+                      <Button type="link">使用</Button>
+                    </Tooltip>,
                   ]}
                 >
                   <p>{template.description}</p>
@@ -656,7 +675,9 @@ const EnhancedAIPage: React.FC = () => {
                       <strong>支持设备：</strong>
                       <Space wrap>
                         {template.device_types.map((device, index) => (
-                          <Tag key={index} size="small">{device}</Tag>
+                          <Tag key={index}>
+                            {device}
+                          </Tag>
                         ))}
                       </Space>
                     </div>
@@ -664,10 +685,12 @@ const EnhancedAIPage: React.FC = () => {
                       <strong>学习目标：</strong>
                       <div style={{ marginTop: 4 }}>
                         {template.learning_objectives.slice(0, 2).map((obj, index) => (
-                          <Tag key={index} color="blue" size="small">{obj}</Tag>
+                          <Tag key={index} color="blue">
+                            {obj}
+                          </Tag>
                         ))}
                         {template.learning_objectives.length > 2 && (
-                          <Tag size="small">+{template.learning_objectives.length - 2}个</Tag>
+                          <Tag>+{template.learning_objectives.length - 2}个</Tag>
                         )}
                       </div>
                     </div>
@@ -678,7 +701,6 @@ const EnhancedAIPage: React.FC = () => {
           </TabPane>
         </Tabs>
       </ContentCard>
-
 
       {/* 项目详情模态框 */}
       <Modal
@@ -692,7 +714,7 @@ const EnhancedAIPage: React.FC = () => {
           </Button>,
           <Button key="use" type="primary">
             使用此模板
-          </Button>
+          </Button>,
         ]}
       >
         {selectedTemplate && (
@@ -702,14 +724,18 @@ const EnhancedAIPage: React.FC = () => {
               <h4>学习目标：</h4>
               <Space wrap>
                 {selectedTemplate.learning_objectives.map((obj, index) => (
-                  <Tag key={index} color="blue">{obj}</Tag>
+                  <Tag key={index} color="blue">
+                    {obj}
+                  </Tag>
                 ))}
               </Space>
             </div>
             <div>
               <h4>项目信息：</h4>
               <ul>
-                <li>适合年龄：{selectedTemplate.age_range[0]}-{selectedTemplate.age_range[1]}岁</li>
+                <li>
+                  适合年龄：{selectedTemplate.age_range[0]}-{selectedTemplate.age_range[1]}岁
+                </li>
                 <li>难度等级：{selectedTemplate.difficulty}</li>
                 <li>预估时间：{selectedTemplate.estimated_time}</li>
                 <li>编程语言：{selectedTemplate.programming_language}</li>

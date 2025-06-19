@@ -28,11 +28,14 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
     try {
       const response = await invoke<string>('read_serial_data', { port });
       if (response) {
-        setData(prev => [...prev, {
-          timestamp: Date.now(),
-          data: response,
-          direction: 'rx'
-        }]);
+        setData(prev => [
+          ...prev,
+          {
+            timestamp: Date.now(),
+            data: response,
+            direction: 'rx',
+          },
+        ]);
       }
     } catch (error) {
       console.error('读取串口数据失败:', error);
@@ -46,13 +49,16 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
     try {
       const dataToSend = input + lineEnding;
       await invoke('write_serial_data', { port, data: dataToSend });
-      
-      setData(prev => [...prev, {
-        timestamp: Date.now(),
-        data: input,
-        direction: 'tx'
-      }]);
-      
+
+      setData(prev => [
+        ...prev,
+        {
+          timestamp: Date.now(),
+          data: input,
+          direction: 'tx',
+        },
+      ]);
+
       setInput('');
     } catch (error) {
       console.error('发送数据失败:', error);
@@ -66,11 +72,13 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
 
   // 导出数据
   const exportData = () => {
-    const content = data.map(item => {
-      const time = new Date(item.timestamp).toLocaleTimeString();
-      const prefix = item.direction === 'rx' ? '<<' : '>>';
-      return `[${time}] ${prefix} ${item.data}`;
-    }).join('\n');
+    const content = data
+      .map(item => {
+        const time = new Date(item.timestamp).toLocaleTimeString();
+        const prefix = item.direction === 'rx' ? '<<' : '>>';
+        return `[${time}] ${prefix} ${item.data}`;
+      })
+      .join('\n');
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -84,7 +92,11 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
   // 格式化数据显示
   const formatData = (str: string, mode: 'ascii' | 'hex') => {
     if (mode === 'hex') {
-      return str.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ').toUpperCase();
+      return str
+        .split('')
+        .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join(' ')
+        .toUpperCase();
     }
     return str;
   };
@@ -114,19 +126,21 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 工具栏 */}
-      <div style={{ 
-        padding: '8px 16px', 
-        borderBottom: '1px solid #d9d9d9',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        flexWrap: 'wrap'
-      }}>
+      <div
+        style={{
+          padding: '8px 16px',
+          borderBottom: '1px solid #d9d9d9',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>端口: {port}</span>
           <span>波特率: {baudRate}</span>
         </div>
-        
+
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
           <button
             onClick={clearData}
@@ -135,12 +149,12 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
               border: '1px solid #d9d9d9',
               borderRadius: 4,
               background: 'white',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             🗑️ 清空
           </button>
-          
+
           <button
             onClick={exportData}
             disabled={data.length === 0}
@@ -150,37 +164,37 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
               borderRadius: 4,
               background: 'white',
               cursor: data.length > 0 ? 'pointer' : 'not-allowed',
-              opacity: data.length > 0 ? 1 : 0.5
+              opacity: data.length > 0 ? 1 : 0.5,
             }}
           >
             💾 导出
           </button>
-          
+
           <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <input
               type="checkbox"
               checked={autoScroll}
-              onChange={(e) => setAutoScroll(e.target.checked)}
+              onChange={e => setAutoScroll(e.target.checked)}
             />
             自动滚动
           </label>
-          
+
           <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <input
               type="checkbox"
               checked={showTimestamp}
-              onChange={(e) => setShowTimestamp(e.target.checked)}
+              onChange={e => setShowTimestamp(e.target.checked)}
             />
             时间戳
           </label>
-          
+
           <select
             value={displayMode}
-            onChange={(e) => setDisplayMode(e.target.value as 'ascii' | 'hex')}
+            onChange={e => setDisplayMode(e.target.value as 'ascii' | 'hex')}
             style={{
               padding: '4px 8px',
               border: '1px solid #d9d9d9',
-              borderRadius: 4
+              borderRadius: 4,
             }}
           >
             <option value="ascii">ASCII</option>
@@ -190,28 +204,28 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
       </div>
 
       {/* 数据显示区 */}
-      <div style={{ 
-        flex: 1, 
-        padding: 16,
-        background: '#f5f5f5',
-        overflowY: 'auto',
-        fontFamily: 'Consolas, Monaco, monospace',
-        fontSize: 13
-      }}>
+      <div
+        style={{
+          flex: 1,
+          padding: 16,
+          background: '#f5f5f5',
+          overflowY: 'auto',
+          fontFamily: 'Consolas, Monaco, monospace',
+          fontSize: 13,
+        }}
+      >
         {data.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#999', padding: 32 }}>
-            等待数据...
-          </div>
+          <div style={{ textAlign: 'center', color: '#999', padding: 32 }}>等待数据...</div>
         ) : (
           <>
             {data.map((item, index) => (
-              <div 
+              <div
                 key={index}
                 style={{
                   marginBottom: 4,
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: 8
+                  gap: 8,
                 }}
               >
                 {showTimestamp && (
@@ -219,16 +233,20 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
                     [{new Date(item.timestamp).toLocaleTimeString()}]
                   </span>
                 )}
-                <span style={{ 
-                  color: item.direction === 'rx' ? '#1890ff' : '#52c41a',
-                  fontWeight: 'bold'
-                }}>
+                <span
+                  style={{
+                    color: item.direction === 'rx' ? '#1890ff' : '#52c41a',
+                    fontWeight: 'bold',
+                  }}
+                >
                   {item.direction === 'rx' ? '<<' : '>>'}
                 </span>
-                <span style={{ 
-                  color: item.direction === 'rx' ? '#333' : '#666',
-                  wordBreak: 'break-all'
-                }}>
+                <span
+                  style={{
+                    color: item.direction === 'rx' ? '#333' : '#666',
+                    wordBreak: 'break-all',
+                  }}
+                >
                   {formatData(item.data, displayMode)}
                 </span>
               </div>
@@ -239,17 +257,19 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
       </div>
 
       {/* 输入区 */}
-      <div style={{ 
-        padding: 16,
-        borderTop: '1px solid #d9d9d9',
-        display: 'flex',
-        gap: 8
-      }}>
+      <div
+        style={{
+          padding: 16,
+          borderTop: '1px solid #d9d9d9',
+          display: 'flex',
+          gap: 8,
+        }}
+      >
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
             if (e.key === 'Enter') {
               sendData();
             }
@@ -260,17 +280,17 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
             padding: '8px 12px',
             border: '1px solid #d9d9d9',
             borderRadius: 4,
-            fontSize: 14
+            fontSize: 14,
           }}
         />
-        
+
         <select
           value={lineEnding}
-          onChange={(e) => setLineEnding(e.target.value)}
+          onChange={e => setLineEnding(e.target.value)}
           style={{
             padding: '8px 12px',
             border: '1px solid #d9d9d9',
-            borderRadius: 4
+            borderRadius: 4,
           }}
         >
           <option value="">无结束符</option>
@@ -278,7 +298,7 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
           <option value="\r">回车符 (CR)</option>
           <option value="\r\n">回车换行 (CRLF)</option>
         </select>
-        
+
         <button
           onClick={sendData}
           style={{
@@ -287,7 +307,7 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
             color: 'white',
             border: 'none',
             borderRadius: 4,
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           发送

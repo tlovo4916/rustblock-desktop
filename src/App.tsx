@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
-import HomePage from "./pages/HomePage";
-import EditorPage from "./pages/EditorPage";
-import DevicesPage from "./pages/DevicesPage";
-import AIPage from "./pages/AIPage";
-import EnhancedAIPage from "./pages/EnhancedAIPage";
-import SettingsPage from "./pages/SettingsPage";
-import DebugPage from "./pages/DebugPage";
+import { useState, useEffect } from 'react';
+import HomePage from './pages/HomePage';
+import EditorPage from './pages/EditorPage';
+import DevicesPage from './pages/DevicesPage';
+import AIPage from './pages/AIPage';
+import EnhancedAIPage from './pages/EnhancedAIPage';
+import SettingsPage from './pages/SettingsPage';
+import DebugPage from './pages/DebugPage';
 
 // 简化的侧边栏组件
-const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; currentPage: string }> = ({ onNavigate, currentPage }) => {
+const SidebarWithNavigation: React.FC<{
+  onNavigate: (page: string) => void;
+  currentPage: string;
+}> = ({ onNavigate, currentPage }) => {
   const menuItems = [
     { key: 'home', label: '🏠 首页' },
     { key: 'editor', label: '🔧 编程环境' },
@@ -20,13 +23,15 @@ const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; curr
   ];
 
   return (
-    <div style={{
-      width: 200,
-      background: '#001529',
-      color: 'white',
-      padding: 16,
-      minHeight: '100vh'
-    }}>
+    <div
+      style={{
+        width: 200,
+        background: '#001529',
+        color: 'white',
+        padding: 16,
+        minHeight: '100vh',
+      }}
+    >
       <h3 style={{ color: 'white', marginBottom: 24 }}>RustBlock</h3>
       <div>
         {menuItems.map(item => (
@@ -37,7 +42,7 @@ const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; curr
               cursor: 'pointer',
               borderRadius: 4,
               marginBottom: 4,
-              background: currentPage === item.key ? '#1890ff' : 'transparent'
+              background: currentPage === item.key ? '#1890ff' : 'transparent',
             }}
             onClick={() => onNavigate(item.key)}
           >
@@ -52,7 +57,7 @@ const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; curr
 interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
-  const [currentPage, setCurrentPage] = useState("home");
+  const [currentPage, setCurrentPage] = useState('home');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,17 +79,17 @@ const App: React.FC<AppProps> = () => {
 
   const renderPage = () => {
     switch (currentPage) {
-      case "editor":
+      case 'editor':
         return <EditorPage />;
-      case "devices":
+      case 'devices':
         return <DevicesPage />;
-      case "ai":
+      case 'ai':
         return <AIPage />;
-      case "enhanced-ai":
+      case 'enhanced-ai':
         return <EnhancedAIPage />;
-      case "settings":
+      case 'settings':
         return <SettingsPage />;
-      case "debug":
+      case 'debug':
         return <DebugPage />;
       default:
         return <HomePage />;
@@ -92,11 +97,9 @@ const App: React.FC<AppProps> = () => {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
       <SidebarWithNavigation onNavigate={setCurrentPage} currentPage={currentPage} />
-      <div style={{ flex: 1, background: "#f0f2f5" }}>
-        {renderPage()}
-      </div>
+      <div style={{ flex: 1, background: '#f0f2f5' }}>{renderPage()}</div>
     </div>
   );
 };

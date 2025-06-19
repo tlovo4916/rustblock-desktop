@@ -1,30 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { safeInvoke } from './MockBackend';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Progress, 
-  Button, 
-  Switch, 
-  Select, 
-  Space, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Progress,
+  Button,
+  Switch,
+  Select,
+  Space,
   message,
   List,
   Tag,
   Tooltip,
-  Alert
+  Alert,
 } from 'antd';
-import { 
-  Activity, 
-  Cpu, 
-  HardDrive, 
-  Zap, 
-  RefreshCw, 
+import {
+  Activity,
+  Cpu,
+  HardDrive,
+  Zap,
+  RefreshCw,
   TrendingUp,
   Database,
-  Clock
+  Clock,
 } from 'lucide-react';
 import styled from 'styled-components';
 
@@ -46,10 +46,8 @@ const StatusIndicator = styled.div<{ status: 'good' | 'warning' | 'critical' }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: ${props => 
-    props.status === 'good' ? '#52c41a' :
-    props.status === 'warning' ? '#faad14' : '#f5222d'
-  };
+  background-color: ${props =>
+    props.status === 'good' ? '#52c41a' : props.status === 'warning' ? '#faad14' : '#f5222d'};
   display: inline-block;
   margin-right: 8px;
 `;
@@ -127,9 +125,9 @@ const PerformanceMonitor: React.FC = () => {
     },
     memory_usage: {
       total_allocated: 268435456, // 256MB
-      heap_size: 134217728,      // 128MB
-      stack_size: 8388608,       // 8MB
-      cache_size: 16777216,      // 16MB
+      heap_size: 134217728, // 128MB
+      stack_size: 8388608, // 8MB
+      cache_size: 16777216, // 16MB
     },
   });
 
@@ -172,7 +170,7 @@ const PerformanceMonitor: React.FC = () => {
         fetchSystemStatus();
         fetchPerformanceHistory();
       }, refreshInterval);
-      
+
       return () => clearInterval(interval);
     }
   }, [isMonitoring, refreshInterval, fetchSystemStatus, fetchPerformanceHistory]);
@@ -190,7 +188,7 @@ const PerformanceMonitor: React.FC = () => {
       const result = await safeInvoke('optimize_performance');
       message.success('性能优化完成！');
       console.log('优化结果:', result);
-      
+
       // 刷新状态
       setTimeout(() => {
         fetchSystemStatus();
@@ -273,13 +271,13 @@ const PerformanceMonitor: React.FC = () => {
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Switch 
+              <Switch
                 checked={isMonitoring}
                 onChange={setIsMonitoring}
                 checkedChildren="监控中"
                 unCheckedChildren="已暂停"
               />
-              
+
               <Select
                 value={refreshInterval}
                 onChange={setRefreshInterval}
@@ -291,7 +289,7 @@ const PerformanceMonitor: React.FC = () => {
                 <Option value={10000}>10秒</Option>
                 <Option value={30000}>30秒</Option>
               </Select>
-              
+
               <Button
                 icon={<RefreshCw size={14} />}
                 size="small"
@@ -304,7 +302,7 @@ const PerformanceMonitor: React.FC = () => {
               </Button>
             </Space>
           </Col>
-          
+
           <Col>
             <Space>
               <Button
@@ -316,7 +314,7 @@ const PerformanceMonitor: React.FC = () => {
               >
                 性能优化
               </Button>
-              
+
               <Button
                 icon={<Database size={14} />}
                 size="small"
@@ -325,7 +323,7 @@ const PerformanceMonitor: React.FC = () => {
               >
                 清空缓存
               </Button>
-              
+
               <Button
                 icon={<TrendingUp size={14} />}
                 size="small"
@@ -334,12 +332,8 @@ const PerformanceMonitor: React.FC = () => {
               >
                 基准测试
               </Button>
-              
-              <Button
-                icon={<Clock size={14} />}
-                size="small"
-                onClick={preloadResources}
-              >
+
+              <Button icon={<Clock size={14} />} size="small" onClick={preloadResources}>
                 预加载
               </Button>
             </Space>
@@ -355,8 +349,11 @@ const PerformanceMonitor: React.FC = () => {
               title={
                 <Space>
                   <Cpu size={16} />
-                  <StatusIndicator 
-                    status={getStatusIndicator(systemStatus.performance_metrics.cpu_usage, [50, 80])}
+                  <StatusIndicator
+                    status={getStatusIndicator(
+                      systemStatus.performance_metrics.cpu_usage,
+                      [50, 80]
+                    )}
                   />
                   CPU使用率
                 </Space>
@@ -365,25 +362,31 @@ const PerformanceMonitor: React.FC = () => {
               precision={1}
               suffix="%"
             />
-            <Progress 
-              percent={systemStatus.performance_metrics.cpu_usage} 
+            <Progress
+              percent={systemStatus.performance_metrics.cpu_usage}
               size="small"
               status={
-                systemStatus.performance_metrics.cpu_usage > 80 ? 'exception' :
-                systemStatus.performance_metrics.cpu_usage > 50 ? 'active' : 'success'
+                systemStatus.performance_metrics.cpu_usage > 80
+                  ? 'exception'
+                  : systemStatus.performance_metrics.cpu_usage > 50
+                    ? 'active'
+                    : 'success'
               }
             />
           </MetricCard>
         </Col>
-        
+
         <Col xs={24} sm={12} md={6}>
           <MetricCard>
             <Statistic
               title={
                 <Space>
                   <HardDrive size={16} />
-                  <StatusIndicator 
-                    status={getStatusIndicator(systemStatus.performance_metrics.memory_usage, [70, 90])}
+                  <StatusIndicator
+                    status={getStatusIndicator(
+                      systemStatus.performance_metrics.memory_usage,
+                      [70, 90]
+                    )}
                   />
                   内存使用率
                 </Space>
@@ -392,17 +395,20 @@ const PerformanceMonitor: React.FC = () => {
               precision={1}
               suffix="%"
             />
-            <Progress 
-              percent={systemStatus.performance_metrics.memory_usage} 
+            <Progress
+              percent={systemStatus.performance_metrics.memory_usage}
               size="small"
               status={
-                systemStatus.performance_metrics.memory_usage > 90 ? 'exception' :
-                systemStatus.performance_metrics.memory_usage > 70 ? 'active' : 'success'
+                systemStatus.performance_metrics.memory_usage > 90
+                  ? 'exception'
+                  : systemStatus.performance_metrics.memory_usage > 70
+                    ? 'active'
+                    : 'success'
               }
             />
           </MetricCard>
         </Col>
-        
+
         <Col xs={24} sm={12} md={6}>
           <MetricCard>
             <Statistic
@@ -420,7 +426,7 @@ const PerformanceMonitor: React.FC = () => {
             </div>
           </MetricCard>
         </Col>
-        
+
         <Col xs={24} sm={12} md={6}>
           <MetricCard>
             <Statistic
@@ -445,15 +451,17 @@ const PerformanceMonitor: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <Card title="性能趋势" size="small">
-            <div style={{ 
-              height: 200, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              background: '#f9f9f9',
-              border: '1px dashed #d9d9d9',
-              borderRadius: 4
-            }}>
+            <div
+              style={{
+                height: 200,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f9f9f9',
+                border: '1px dashed #d9d9d9',
+                borderRadius: 4,
+              }}
+            >
               <div style={{ textAlign: 'center', color: '#999' }}>
                 <TrendingUp size={32} style={{ marginBottom: 8 }} />
                 <p>性能趋势图</p>
@@ -462,7 +470,7 @@ const PerformanceMonitor: React.FC = () => {
             </div>
           </Card>
         </Col>
-        
+
         <Col xs={24} lg={8}>
           <Card title="系统信息" size="small">
             <List
@@ -471,28 +479,28 @@ const PerformanceMonitor: React.FC = () => {
                 {
                   title: '总内存',
                   value: formatBytes(systemStatus.memory_usage.total_allocated),
-                  icon: <HardDrive size={14} />
+                  icon: <HardDrive size={14} />,
                 },
                 {
                   title: '堆内存',
                   value: formatBytes(systemStatus.memory_usage.heap_size),
-                  icon: <Database size={14} />
+                  icon: <Database size={14} />,
                 },
                 {
                   title: '缓存大小',
                   value: formatBytes(systemStatus.memory_usage.cache_size),
-                  icon: <Activity size={14} />
+                  icon: <Activity size={14} />,
                 },
                 {
                   title: '平均响应时间',
                   value: `${systemStatus.performance_metrics.average_response_time.toFixed(1)}ms`,
-                  icon: <Clock size={14} />
+                  icon: <Clock size={14} />,
                 },
                 {
                   title: '错误率',
                   value: `${(systemStatus.performance_metrics.error_rate * 100).toFixed(2)}%`,
-                  icon: <TrendingUp size={14} />
-                }
+                  icon: <TrendingUp size={14} />,
+                },
               ]}
               renderItem={item => (
                 <List.Item>
@@ -509,26 +517,26 @@ const PerformanceMonitor: React.FC = () => {
       </Row>
 
       {/* 性能建议 */}
-      {systemStatus.performance_metrics.cpu_usage > 80 || 
-       systemStatus.performance_metrics.memory_usage > 90 && (
-        <Alert
-          message="性能警告"
-          description="系统资源使用率较高，建议执行性能优化或清空缓存。"
-          type="warning"
-          showIcon
-          style={{ marginTop: 16 }}
-          action={
-            <Space>
-              <Button size="small" onClick={optimizePerformance}>
-                立即优化
-              </Button>
-              <Button size="small" onClick={clearCache}>
-                清空缓存
-              </Button>
-            </Space>
-          }
-        />
-      )}
+      {systemStatus.performance_metrics.cpu_usage > 80 ||
+        (systemStatus.performance_metrics.memory_usage > 90 && (
+          <Alert
+            message="性能警告"
+            description="系统资源使用率较高，建议执行性能优化或清空缓存。"
+            type="warning"
+            showIcon
+            style={{ marginTop: 16 }}
+            action={
+              <Space>
+                <Button size="small" onClick={optimizePerformance}>
+                  立即优化
+                </Button>
+                <Button size="small" onClick={clearCache}>
+                  清空缓存
+                </Button>
+              </Space>
+            }
+          />
+        ))}
     </MonitorContainer>
   );
 };

@@ -1,21 +1,103 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [
+    react(),
+  ],
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // Path resolution
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@components': resolve(__dirname, 'src/components'),
+      '@pages': resolve(__dirname, 'src/pages'),
+      '@utils': resolve(__dirname, 'src/utils'),
+      '@types': resolve(__dirname, 'src/types'),
+    },
+  },
+
+  // Build configuration
+  build: {
+    // Target modern browsers
+    target: 'esnext',
+    // Generate sourcemaps for debugging
+    sourcemap: process.env.NODE_ENV === 'development',
+    // Optimize bundle
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor chunks for better caching
+          vendor: ['react', 'react-dom'],
+          antd: ['antd'],
+          blockly: ['blockly'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 1000,
+    // Enable minification in production
+    minify: process.env.NODE_ENV === 'production' ? 'terser' : false,
+    // Terser options for better compression
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: true,
+      },
+    },
+  },
+
+  // Development server configuration
   server: {
     port: 1420,
     strictPort: true,
+    host: '0.0.0.0',
+    // Enable HMR
+    hmr: {
+      overlay: true,
+    },
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      // Tell vite to ignore watching `src-tauri`
+      ignored: ['**/src-tauri/**', '**/target/**', '**/Cargo.lock'],
+    },
+  },
+
+  // CSS configuration
+  css: {
+    devSourcemap: true,
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true,
+      },
+    },
+  },
+
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'antd', 'blockly'],
+    exclude: ['@tauri-apps/api'],
+  },
+
+  // Environment variables
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
+
+  // Prevent vite from obscuring rust errors
+  clearScreen: false,
+
+  // Testing configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'src/test/'],
     },
   },
 })); 

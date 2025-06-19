@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Button, Card, Select, message, Space, Tooltip, Alert, List, Modal, Tag } from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button, Card, Select, message, Tooltip, Alert, List, Modal, Tag } from 'antd';
 import { Play, Download, Save, Upload, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 import styled from 'styled-components';
 import { validateCode, ValidationResult, getValidationSummary } from '../utils/codeValidator';
@@ -68,7 +68,7 @@ interface BlocklyWorkspaceProps {
 const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
   selectedDevice,
   onCodeGenerated,
-  onUploadCode
+  onUploadCode,
 }) => {
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('arduino');
@@ -79,8 +79,9 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
 
   // 模拟代码生成
   const generateCode = useCallback(() => {
-    const sampleCode = selectedLanguage === 'arduino' 
-      ? `// Arduino代码示例
+    const sampleCode =
+      selectedLanguage === 'arduino'
+        ? `// Arduino代码示例
 void setup() {
   Serial.begin(9600);
   pinMode(13, OUTPUT);
@@ -92,7 +93,7 @@ void loop() {
   digitalWrite(13, LOW);
   delay(1000);
 }`
-      : `# MicroPython代码示例
+        : `# MicroPython代码示例
 from machine import Pin
 import time
 
@@ -106,25 +107,28 @@ while True:
 
     setGeneratedCode(sampleCode);
     onCodeGenerated?.(sampleCode, selectedLanguage);
-    
+
     // 自动验证代码
     validateGeneratedCode(sampleCode);
   }, [selectedLanguage, onCodeGenerated]);
 
   // 验证代码
-  const validateGeneratedCode = useCallback((code: string) => {
-    if (!code.trim()) {
-      setValidationResult(null);
-      return;
-    }
-    
-    const result = validateCode(code, selectedLanguage);
-    setValidationResult(result);
-    
-    if (!result.valid) {
-      console.warn('代码验证失败:', result.errors);
-    }
-  }, [selectedLanguage]);
+  const validateGeneratedCode = useCallback(
+    (code: string) => {
+      if (!code.trim()) {
+        setValidationResult(null);
+        return;
+      }
+
+      const result = validateCode(code, selectedLanguage);
+      setValidationResult(result);
+
+      if (!result.valid) {
+        console.warn('代码验证失败:', result.errors);
+      }
+    },
+    [selectedLanguage]
+  );
 
   // 初始化时生成示例代码
   useEffect(() => {
@@ -137,7 +141,7 @@ while True:
       language: selectedLanguage,
       code: generatedCode,
       device: selectedDevice?.id || null,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
@@ -161,18 +165,18 @@ while True:
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         try {
           const projectData = JSON.parse(e.target?.result as string);
-          
+
           if (projectData.language) {
             setSelectedLanguage(projectData.language);
           }
-          
+
           if (projectData.code) {
             setGeneratedCode(projectData.code);
           }
-          
+
           message.success('项目已加载');
         } catch (error) {
           console.error('加载项目失败:', error);
@@ -190,7 +194,7 @@ while True:
       message.warning('请先生成代码');
       return;
     }
-    
+
     if (!selectedDevice) {
       message.warning('请先选择设备');
       return;
@@ -198,7 +202,7 @@ while True:
 
     // 验证代码
     const result = validateCode(generatedCode, selectedLanguage);
-    
+
     if (!result.valid) {
       Modal.confirm({
         title: '代码存在错误',
@@ -243,7 +247,7 @@ while True:
 
     const extension = selectedLanguage === 'arduino' ? '.ino' : '.py';
     const filename = `rustblock_code_${Date.now()}${extension}`;
-    
+
     const blob = new Blob([generatedCode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -260,7 +264,7 @@ while True:
     const initializeBlockly = async () => {
       try {
         // 动态导入 Blockly 以避免初始加载问题
-        const Blockly = await import('blockly');
+        await import('blockly');
         setBlocklyLoaded(true);
         console.log('Blockly已加载');
       } catch (error) {
@@ -279,7 +283,7 @@ while True:
         <ToolbarSection>
           <Select
             value={selectedLanguage}
-            onChange={(value) => {
+            onChange={value => {
               setSelectedLanguage(value);
               generateCode();
             }}
@@ -289,7 +293,7 @@ while True:
             <Option value="arduino">Arduino</Option>
             <Option value="micropython">MicroPython</Option>
           </Select>
-          
+
           <Button
             icon={<Eye size={16} />}
             size="small"
@@ -298,10 +302,12 @@ while True:
           >
             代码预览
           </Button>
-          
+
           {validationResult && (
             <Button
-              icon={validationResult.valid ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+              icon={
+                validationResult.valid ? <CheckCircle size={16} /> : <AlertTriangle size={16} />
+              }
               size="small"
               type={validationResult.valid ? 'default' : 'primary'}
               danger={!validationResult.valid}
@@ -316,15 +322,15 @@ while True:
           <Tooltip title="保存项目">
             <Button icon={<Save size={16} />} size="small" onClick={saveProject} />
           </Tooltip>
-          
+
           <Tooltip title="加载项目">
             <Button icon={<Upload size={16} />} size="small" onClick={loadProject} />
           </Tooltip>
-          
+
           <Tooltip title="下载代码">
             <Button icon={<Download size={16} />} size="small" onClick={downloadCode} />
           </Tooltip>
-          
+
           <Button
             icon={<Play size={16} />}
             type="primary"
@@ -345,9 +351,7 @@ while True:
               <div style={{ fontSize: 48, marginBottom: 16 }}>🧩</div>
               <h3>可视化编程工作区</h3>
               <p>Blockly积木编程界面正在开发中...</p>
-              <p style={{ fontSize: 12, color: '#999' }}>
-                将在这里显示拖拽式积木编程界面
-              </p>
+              <p style={{ fontSize: 12, color: '#999' }}>将在这里显示拖拽式积木编程界面</p>
             </div>
           ) : (
             <div style={{ textAlign: 'center', color: '#666' }}>
@@ -378,17 +382,11 @@ while True:
               {validationResult && (
                 <div style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>
                   {validationResult.valid ? (
-                    <Alert
-                      message="代码验证通过"
-                      type="success"
-                      size="small"
-                      showIcon
-                    />
+                    <Alert message="代码验证通过" type="success" showIcon />
                   ) : (
                     <Alert
                       message={getValidationSummary(validationResult)}
                       type="error"
-                      size="small"
                       showIcon
                       action={
                         <Button size="small" onClick={() => setShowValidationDetails(true)}>
@@ -397,12 +395,11 @@ while True:
                       }
                     />
                   )}
-                  
+
                   {validationResult.warnings.length > 0 && validationResult.valid && (
                     <Alert
                       message={`${validationResult.warnings.length} 个警告`}
                       type="warning"
-                      size="small"
                       showIcon
                       style={{ marginTop: 4 }}
                       action={
@@ -414,13 +411,13 @@ while True:
                   )}
                 </div>
               )}
-              
+
               <CodePreview>{generatedCode || '// 请点击"重新生成"按钮生成示例代码'}</CodePreview>
             </Card>
           </CodePreviewContainer>
         )}
       </WorkspaceContainer>
-      
+
       {/* 验证详情模态框 */}
       <Modal
         title="代码验证详情"
@@ -429,7 +426,7 @@ while True:
         footer={[
           <Button key="close" onClick={() => setShowValidationDetails(false)}>
             关闭
-          </Button>
+          </Button>,
         ]}
         width={700}
       >
@@ -444,15 +441,22 @@ while True:
                 <List
                   size="small"
                   dataSource={validationResult.errors}
-                  renderItem={(error) => (
-                    <List.Item style={{ border: '1px solid #ffccc7', borderRadius: 4, marginBottom: 4, padding: 8 }}>
+                  renderItem={error => (
+                    <List.Item
+                      style={{
+                        border: '1px solid #ffccc7',
+                        borderRadius: 4,
+                        marginBottom: 4,
+                        padding: 8,
+                      }}
+                    >
                       <div>
                         <div style={{ fontWeight: 'bold', color: '#ff4d4f' }}>
                           第 {error.line} 行，第 {error.column} 列
                         </div>
                         <div>{error.message}</div>
                         {error.code && (
-                          <Tag size="small" color="red" style={{ marginTop: 4 }}>
+                          <Tag color="red" style={{ marginTop: 4 }}>
                             {error.code}
                           </Tag>
                         )}
@@ -462,7 +466,7 @@ while True:
                 />
               </div>
             )}
-            
+
             {/* 警告列表 */}
             {validationResult.warnings.length > 0 && (
               <div>
@@ -472,15 +476,22 @@ while True:
                 <List
                   size="small"
                   dataSource={validationResult.warnings}
-                  renderItem={(warning) => (
-                    <List.Item style={{ border: '1px solid #ffe7ba', borderRadius: 4, marginBottom: 4, padding: 8 }}>
+                  renderItem={warning => (
+                    <List.Item
+                      style={{
+                        border: '1px solid #ffe7ba',
+                        borderRadius: 4,
+                        marginBottom: 4,
+                        padding: 8,
+                      }}
+                    >
                       <div>
                         <div style={{ fontWeight: 'bold', color: '#faad14' }}>
                           第 {warning.line} 行，第 {warning.column} 列
                         </div>
                         <div>{warning.message}</div>
                         {warning.code && (
-                          <Tag size="small" color="orange" style={{ marginTop: 4 }}>
+                          <Tag color="orange" style={{ marginTop: 4 }}>
                             {warning.code}
                           </Tag>
                         )}
@@ -490,7 +501,7 @@ while True:
                 />
               </div>
             )}
-            
+
             {/* 无问题时的提示 */}
             {validationResult.errors.length === 0 && validationResult.warnings.length === 0 && (
               <div style={{ textAlign: 'center', padding: 40, color: '#52c41a' }}>

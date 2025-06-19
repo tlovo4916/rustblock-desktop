@@ -2,13 +2,15 @@ import React from 'react';
 
 const Sidebar: React.FC = () => {
   return (
-    <div style={{
-      width: 200,
-      background: '#001529',
-      color: 'white',
-      padding: 16,
-      minHeight: '100vh'
-    }}>
+    <div
+      style={{
+        width: 200,
+        background: '#001529',
+        color: 'white',
+        padding: 16,
+        minHeight: '100vh',
+      }}
+    >
       <h3 style={{ color: 'white', marginBottom: 24 }}>RustBlock</h3>
       <div>
         <div style={{ padding: 8, cursor: 'pointer' }}>🏠 首页</div>
@@ -21,4 +23,4 @@ const Sidebar: React.FC = () => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;

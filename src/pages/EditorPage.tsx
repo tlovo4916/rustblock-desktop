@@ -55,10 +55,10 @@ const EditorPage: React.FC = () => {
 
     try {
       // 检查设备连接状态
-      const deviceStatus = await safeInvoke('get_device_status', { 
-        device_id: selectedDevice.id 
+      const deviceStatus = await safeInvoke('get_device_status', {
+        device_id: selectedDevice.id,
       });
-      
+
       if (!deviceStatus?.ready) {
         message.error('设备未准备就绪，请检查设备连接和驱动');
         return false;
@@ -73,13 +73,13 @@ const EditorPage: React.FC = () => {
       // 检查上传工具
       const tools = await safeInvoke('check_upload_tools');
       const requiredTool = language === 'arduino' ? 'arduino-cli' : 'mpremote';
-      
+
       if (!tools[requiredTool]) {
         const install = await Modal.confirm({
           title: '缺少上传工具',
           content: `需要安装 ${requiredTool} 才能上传代码，是否自动安装？`,
         });
-        
+
         if (install) {
           try {
             await safeInvoke('install_missing_tools');
@@ -128,13 +128,13 @@ const EditorPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Card 
+      <Card
         title="可视化编程环境"
         extra={
           <Space>
             <Select
               value={selectedDevice?.id}
-              onChange={(deviceId) => {
+              onChange={deviceId => {
                 const device = devices.find(d => d.id === deviceId);
                 setSelectedDevice(device || null);
               }}
@@ -148,12 +148,8 @@ const EditorPage: React.FC = () => {
                 </Option>
               ))}
             </Select>
-            
-            <Button
-              icon={<RefreshCw size={16} />}
-              onClick={scanDevices}
-              loading={isLoading}
-            >
+
+            <Button icon={<RefreshCw size={16} />} onClick={scanDevices} loading={isLoading}>
               刷新设备
             </Button>
           </Space>
@@ -165,9 +161,7 @@ const EditorPage: React.FC = () => {
             ✓ 已选择设备: {selectedDevice.name} ({selectedDevice.device_type})
           </div>
         ) : (
-          <div style={{ color: '#faad14' }}>
-            ⚠️ 请连接设备并选择目标设备
-          </div>
+          <div style={{ color: '#faad14' }}>⚠️ 请连接设备并选择目标设备</div>
         )}
       </Card>
 
@@ -197,4 +191,4 @@ const EditorPage: React.FC = () => {
   );
 };
 
-export default EditorPage; 
+export default EditorPage;

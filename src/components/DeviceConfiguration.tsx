@@ -29,7 +29,7 @@ interface ConfigProfile {
 const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onConfigSaved }) => {
   const [config, setConfig] = useState<DeviceConfig>({
     board_type: 'arduino:avr:uno',
-    upload_speed: 115200
+    upload_speed: 115200,
   });
   const [profiles, setProfiles] = useState<ConfigProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
@@ -40,7 +40,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
   // 加载设备配置
   const loadDeviceConfig = async () => {
     if (!deviceId) return;
-    
+
     try {
       const result = await invoke<DeviceConfig>('get_device_config', { deviceId });
       if (result) {
@@ -64,7 +64,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
   // 保存配置
   const saveConfig = async () => {
     if (!deviceId) return;
-    
+
     setLoading(true);
     try {
       await invoke('save_device_config', { deviceId, config });
@@ -91,9 +91,9 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
       const profile: Omit<ConfigProfile, 'id' | 'created_at'> = {
         name: profileName,
         device_type: config.board_type.split(':')[2] || 'unknown',
-        config: { ...config }
+        config: { ...config },
       };
-      
+
       await invoke('save_config_profile', { profile });
       alert('配置文件保存成功！');
       setProfileName('');
@@ -147,7 +147,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importedConfig = JSON.parse(e.target?.result as string);
         setConfig(importedConfig);
@@ -174,7 +174,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
     { value: 'esp32:esp32:esp32s2', label: 'ESP32-S2' },
     { value: 'esp32:esp32:esp32c3', label: 'ESP32-C3' },
     { value: 'rp2040:rp2040:rpipico', label: 'Raspberry Pi Pico' },
-    { value: 'microbit:microbit:microbit', label: 'BBC micro:bit' }
+    { value: 'microbit:microbit:microbit', label: 'BBC micro:bit' },
   ];
 
   // 上传速度选项
@@ -192,7 +192,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
   return (
     <div style={{ padding: 24 }}>
       <h2>设备配置 {deviceId ? `- ${deviceId}` : ''}</h2>
-      
+
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <Tabs.TabPane tab="基本配置" key="basic">
           <div style={{ marginBottom: 24 }}>
@@ -200,11 +200,18 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
               <label style={{ display: 'block', marginBottom: 4 }}>板卡类型</label>
               <select
                 value={config.board_type}
-                onChange={(e) => setConfig({ ...config, board_type: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                onChange={e => setConfig({ ...config, board_type: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 4,
+                }}
               >
                 {boardTypes.map(board => (
-                  <option key={board.value} value={board.value}>{board.label}</option>
+                  <option key={board.value} value={board.value}>
+                    {board.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -213,11 +220,18 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
               <label style={{ display: 'block', marginBottom: 4 }}>上传速度</label>
               <select
                 value={config.upload_speed}
-                onChange={(e) => setConfig({ ...config, upload_speed: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                onChange={e => setConfig({ ...config, upload_speed: parseInt(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 4,
+                }}
               >
                 {uploadSpeeds.map(speed => (
-                  <option key={speed} value={speed}>{speed} baud</option>
+                  <option key={speed} value={speed}>
+                    {speed} baud
+                  </option>
                 ))}
               </select>
             </div>
@@ -227,9 +241,14 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
               <input
                 type="text"
                 value={config.programmer || ''}
-                onChange={(e) => setConfig({ ...config, programmer: e.target.value })}
+                onChange={e => setConfig({ ...config, programmer: e.target.value })}
                 placeholder="例如: avrisp, usbasp"
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 4,
+                }}
               />
             </div>
           </div>
@@ -243,11 +262,20 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                   <label style={{ display: 'block', marginBottom: 4 }}>CPU 频率</label>
                   <select
                     value={config.cpu_frequency || 160}
-                    onChange={(e) => setConfig({ ...config, cpu_frequency: parseInt(e.target.value) })}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                    onChange={e =>
+                      setConfig({ ...config, cpu_frequency: parseInt(e.target.value) })
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: 4,
+                    }}
                   >
                     {cpuFrequencies.map(freq => (
-                      <option key={freq} value={freq}>{freq} MHz</option>
+                      <option key={freq} value={freq}>
+                        {freq} MHz
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -256,11 +284,18 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                   <label style={{ display: 'block', marginBottom: 4 }}>Flash 模式</label>
                   <select
                     value={config.flash_mode || 'dio'}
-                    onChange={(e) => setConfig({ ...config, flash_mode: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                    onChange={e => setConfig({ ...config, flash_mode: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: 4,
+                    }}
                   >
                     {flashModes.map(mode => (
-                      <option key={mode} value={mode}>{mode.toUpperCase()}</option>
+                      <option key={mode} value={mode}>
+                        {mode.toUpperCase()}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -269,11 +304,18 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                   <label style={{ display: 'block', marginBottom: 4 }}>Flash 大小</label>
                   <select
                     value={config.flash_size || '4MB'}
-                    onChange={(e) => setConfig({ ...config, flash_size: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                    onChange={e => setConfig({ ...config, flash_size: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: 4,
+                    }}
                   >
                     {flashSizes.map(size => (
-                      <option key={size} value={size}>{size}</option>
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -284,17 +326,19 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
               <label style={{ display: 'block', marginBottom: 4 }}>额外编译标志</label>
               <textarea
                 value={config.extra_flags?.join('\n') || ''}
-                onChange={(e) => setConfig({ 
-                  ...config, 
-                  extra_flags: e.target.value.split('\n').filter(f => f.trim()) 
-                })}
+                onChange={e =>
+                  setConfig({
+                    ...config,
+                    extra_flags: e.target.value.split('\n').filter(f => f.trim()),
+                  })
+                }
                 placeholder="每行一个标志"
-                style={{ 
-                  width: '100%', 
-                  padding: '8px 12px', 
-                  border: '1px solid #d9d9d9', 
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #d9d9d9',
                   borderRadius: 4,
-                  minHeight: 100
+                  minHeight: 100,
                 }}
               />
             </div>
@@ -309,9 +353,14 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                 <input
                   type="text"
                   value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
+                  onChange={e => setProfileName(e.target.value)}
                   placeholder="配置文件名称"
-                  style={{ flex: 1, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: 4,
+                  }}
                 />
                 <button
                   onClick={saveAsProfile}
@@ -321,7 +370,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                     color: 'white',
                     border: 'none',
                     borderRadius: 4,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
                   }}
                 >
                   保存
@@ -332,28 +381,30 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
             <div>
               <h4>已保存的配置文件</h4>
               {profiles.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#999', padding: 24 }}>
-                  暂无配置文件
-                </div>
+                <div style={{ textAlign: 'center', color: '#999', padding: 24 }}>暂无配置文件</div>
               ) : (
                 <div style={{ display: 'grid', gap: 8 }}>
                   {profiles.map(profile => (
                     <div
                       key={profile.id}
                       style={{
-                        border: selectedProfile === profile.id ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                        border:
+                          selectedProfile === profile.id
+                            ? '2px solid #1890ff'
+                            : '1px solid #d9d9d9',
                         borderRadius: 8,
                         padding: 12,
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        background: selectedProfile === profile.id ? '#e6f7ff' : 'white'
+                        background: selectedProfile === profile.id ? '#e6f7ff' : 'white',
                       }}
                     >
                       <div>
                         <div style={{ fontWeight: 'bold' }}>{profile.name}</div>
                         <div style={{ fontSize: 12, color: '#666' }}>
-                          {profile.device_type} • {new Date(profile.created_at).toLocaleDateString()}
+                          {profile.device_type} •{' '}
+                          {new Date(profile.created_at).toLocaleDateString()}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 4 }}>
@@ -366,7 +417,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                             border: 'none',
                             borderRadius: 4,
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
                           加载
@@ -380,7 +431,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
                             border: 'none',
                             borderRadius: 4,
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
                           删除
@@ -395,13 +446,15 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
         </Tabs.TabPane>
       </Tabs>
 
-      <div style={{ 
-        marginTop: 24, 
-        paddingTop: 24, 
-        borderTop: '1px solid #d9d9d9',
-        display: 'flex',
-        justifyContent: 'space-between'
-      }}>
+      <div
+        style={{
+          marginTop: 24,
+          paddingTop: 24,
+          borderTop: '1px solid #d9d9d9',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={exportConfig}
@@ -411,26 +464,23 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
               color: 'white',
               border: 'none',
               borderRadius: 4,
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             导出配置
           </button>
-          <label style={{
-            padding: '8px 16px',
-            background: '#722ed1',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer'
-          }}>
+          <label
+            style={{
+              padding: '8px 16px',
+              background: '#722ed1',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              cursor: 'pointer',
+            }}
+          >
             导入配置
-            <input
-              type="file"
-              accept=".json"
-              onChange={importConfig}
-              style={{ display: 'none' }}
-            />
+            <input type="file" accept=".json" onChange={importConfig} style={{ display: 'none' }} />
           </label>
         </div>
 
@@ -443,7 +493,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
             color: 'white',
             border: 'none',
             borderRadius: 4,
-            cursor: loading || !deviceId ? 'not-allowed' : 'pointer'
+            cursor: loading || !deviceId ? 'not-allowed' : 'pointer',
           }}
         >
           {loading ? '保存中...' : '保存配置'}

@@ -4,15 +4,17 @@ const HomePage: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <h1>欢迎使用 RustBlock Desktop</h1>
-      <div style={{ 
-        background: 'white', 
-        padding: 24, 
-        borderRadius: 8, 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
-      }}>
+      <div
+        style={{
+          background: 'white',
+          padding: 24,
+          borderRadius: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
         <h2>🎯 面向10岁以下小朋友的可视化编程环境</h2>
         <p>支持 Arduino、micro:bit 等硬件设备编程</p>
-        
+
         <div style={{ marginTop: 32 }}>
           <h3>✨ 主要功能</h3>
           <ul>
@@ -22,7 +24,7 @@ const HomePage: React.FC = () => {
             <li>🚀 一键代码上传 - 让创意变成现实</li>
           </ul>
         </div>
-        
+
         <div style={{ marginTop: 32 }}>
           <h3>🔗 快速开始</h3>
           <ol>
@@ -37,4 +39,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage; 
+export default HomePage;

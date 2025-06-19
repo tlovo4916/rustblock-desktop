@@ -1,6 +1,13 @@
 # RustBlock Desktop
 
+![RustBlock](https://img.shields.io/badge/RustBlock-Desktop-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Tauri](https://img.shields.io/badge/Tauri-v2.0-orange.svg)
+![React](https://img.shields.io/badge/React-18-blue.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg)
+
 > 面向10岁以下小朋友的可视化编程环境，支持Arduino、micro:bit等硬件设备编程
+> 一个基于 Tauri v2 和 React 的现代化桌面应用程序，为微控制器编程提供可视化编程环境和 AI 辅助功能。
 
 ## 📖 项目介绍
 
@@ -59,13 +66,60 @@ cargo install tauri-cli
 ### 开发模式运行
 ```bash
 # 启动开发服务器
-npm run tauri dev
+npm run tauri:dev
+
+# 或者分别启动前端和后端
+npm run dev          # 启动前端开发服务器
+npm run tauri        # 启动 Tauri 应用
 ```
 
 ### 构建生产版本
 ```bash
-# 构建应用
-npm run tauri build
+# 构建应用程序
+npm run tauri:build
+
+# 仅构建前端
+npm run build
+```
+
+## 🛠️ 开发工具
+
+### 代码质量
+
+```bash
+# 代码检查
+npm run lint
+npm run lint:fix
+
+# 代码格式化
+npm run format
+npm run format:check
+
+# 类型检查
+npm run type-check
+```
+
+### 测试
+
+```bash
+# 运行测试
+npm run test
+
+# 测试 UI
+npm run test:ui
+
+# 测试覆盖率
+npm run test:coverage
+```
+
+### 其他工具
+
+```bash
+# 清理构建文件
+npm run clean
+
+# 分析构建包大小
+npm run analyze
 ```
 
 ## 📁 项目结构
