@@ -18,7 +18,7 @@ const AIPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: '你好！我是RustBlock的AI助手，我可以帮助你学习编程。你有什么问题吗？',
+      content: '哈喽哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
       timestamp: new Date()
     }
   ]);
@@ -213,7 +213,7 @@ const AIPage: React.FC = () => {
                     maxWidth: '80%',
                     wordBreak: 'break-word'
                   }}>
-                    <strong>{msg.role === 'user' ? '👦 你:' : '🤖 AI助手:'}</strong>
+                    <strong>{msg.role === 'user' ? ' ' : ' 🐱 小派:'}</strong>
                     <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>
                       {msg.content}
                     </div>
@@ -282,7 +282,7 @@ const AIPage: React.FC = () => {
                   border: '1px solid #d9d9d9',
                   borderRadius: 4
                 }}
-                placeholder={apiKey ? "输入你的问题..." : "请先配置API密钥"}
+                placeholder={apiKey ? "给小派提问题吧~" : "请先配置API密钥"}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}

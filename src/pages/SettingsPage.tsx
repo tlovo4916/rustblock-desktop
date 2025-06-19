@@ -230,7 +230,7 @@ const SettingsPage: React.FC = () => {
                 }}>
                   <p><strong>RustBlock Desktop</strong></p>
                   <p>版本: 0.0.1</p>
-                  <p>开发团队: supiedt Team</p>
+                  <p>开发团队: SupieDT Team</p>
                   <p>基于 Tauri + React + Rust 构建</p>
                   <div style={{ marginTop: 16 }}>
                     <button style={{

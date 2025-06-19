@@ -178,7 +178,7 @@ rustblock-desktop/
 
 - 项目主页: [GitHub Repository](https://github.com/supiedt/rustblock-desktop)
 - 问题反馈: [GitHub Issues](https://github.com/supiedt/rustblock-desktop/issues)
-- 开发团队: supiedt Team
+- 开发团队: SupieDT Team
 
 ## 🙏 鸣谢
 
