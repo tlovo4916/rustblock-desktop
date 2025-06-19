@@ -49,6 +49,9 @@ dirs = "5.0"
 # UUID生成
 uuid = { version = "1.11", features = ["v4", "serde"] }
 
+# 全局状态管理
+lazy_static = "1.4"
+
 # 移除不需要的依赖，简化初始版本
 # async-openai = "0.20"
 

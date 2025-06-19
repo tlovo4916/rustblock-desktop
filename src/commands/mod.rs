@@ -5,6 +5,8 @@ pub mod enhanced_ai;
 pub mod project;
 pub mod code_gen;
 pub mod performance;
+pub mod serial;
+pub mod tools;
 
 use tauri::command;
 

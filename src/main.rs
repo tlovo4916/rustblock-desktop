@@ -15,7 +15,6 @@ use device::{
 use commands::device::{DeviceDetectorState, DeviceUploaderState, SerialManagerState};
 use commands::ai::AIServiceState;
 use commands::enhanced_ai::EnhancedAIServiceState;
-use commands::performance::{PerformanceMonitorState, GlobalCacheState, TaskManagerState};
 
 #[tokio::main]
 async fn main() {
@@ -53,17 +52,8 @@ async fn main() {
             commands::device::install_device_driver,
             commands::device::get_available_drivers,
             commands::device::get_installed_drivers,
-            // 上传工具命令
-            commands::device::check_upload_tools,
-            commands::device::install_missing_tools,
             commands::device::get_arduino_libraries,
             commands::device::install_arduino_library,
-            // 串口通信命令
-            commands::device::connect_serial,
-            commands::device::disconnect_serial,
-            commands::device::send_serial_data,
-            commands::device::read_serial_data,
-            commands::device::get_connected_ports,
             commands::device::refresh_device_status,
             commands::device::refresh_all_devices,
             // 设备配置文件命令
@@ -119,7 +109,27 @@ async fn main() {
             commands::performance::configure_performance_settings,
             commands::performance::run_performance_benchmark,
             commands::performance::enable_lazy_loading,
-            commands::performance::get_resource_usage
+            commands::performance::get_resource_usage,
+            // 串口通信命令
+            commands::serial::list_serial_ports,
+            commands::serial::connect_serial,
+            commands::serial::disconnect_serial,
+            commands::serial::write_serial_data,
+            commands::serial::read_serial_data,
+            commands::serial::get_connected_ports,
+            commands::serial::set_serial_params,
+            commands::serial::clear_serial_buffers,
+            commands::serial::record_connection_history,
+            commands::serial::get_connection_history,
+            // 工具和上传命令
+            commands::tools::check_system_tools,
+            commands::tools::check_upload_tools,
+            commands::tools::install_tool,
+            commands::tools::install_missing_tools,
+            commands::tools::compile_code,
+            commands::tools::upload_firmware,
+            commands::tools::verify_upload,
+            commands::tools::cancel_upload
         ])
         .setup(|app| {
             println!("RustBlock Desktop 正在启动...");

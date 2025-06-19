@@ -1,8 +1,8 @@
 use crate::device::{
-    detector::DeviceDetectorState,
     connection_manager::{DeviceProfile, ConnectionStatus},
     DeviceType,
 };
+use crate::commands::device::DeviceDetectorState;
 use anyhow::Result;
 use tauri::{command, State};
 use log::{info, error};

@@ -3536,6 +3536,7 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "env_logger",
+ "lazy_static",
  "log",
  "regex",
  "reqwest",
@@ -3555,6 +3556,7 @@ dependencies = [
  "tokio",
  "tokio-serial",
  "usb-ids",
+ "uuid",
 ]
 
 [[package]]

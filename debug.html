@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试信息</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>前端调试信息</h1>
+    
+    <h2>检查项目</h2>
+    <div id="checks"></div>
+    
+    <h2>控制台输出</h2>
+    <pre id="console"></pre>
+    
+    <script>
+        const checks = document.getElementById('checks');
+        const consoleOutput = document.getElementById('console');
+        
+        // 重写 console.log 和 console.error
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToConsole(type, ...args) {
+            const msg = args.map(arg => {
+                if (typeof arg === 'object') {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
+            
+            consoleOutput.innerHTML += `<span class="${type}">[${type}] ${msg}</span>\n`;
+            
+            if (type === 'error') {
+                originalError.apply(console, args);
+            } else {
+                originalLog.apply(console, args);
+            }
+        }
+        
+        console.log = (...args) => addToConsole('info', ...args);
+        console.error = (...args) => addToConsole('error', ...args);
+        
+        // 检查函数
+        function addCheck(name, status, message) {
+            const div = document.createElement('div');
+            div.className = status ? 'success' : 'error';
+            div.innerHTML = `${status ? '✓' : '✗'} ${name}: ${message}`;
+            checks.appendChild(div);
+        }
+        
+        // 开始检查
+        console.log('开始前端诊断...');
+        
+        // 1. 检查 React
+        fetch('http://localhost:1420/src/main.tsx')
+            .then(res => res.text())
+            .then(text => {
+                addCheck('main.tsx', true, '找到入口文件');
+                console.log('入口文件内容长度:', text.length);
+            })
+            .catch(err => {
+                addCheck('main.tsx', false, err.message);
+            });
+            
+        // 2. 检查根元素
+        setTimeout(() => {
+            fetch('http://localhost:1420/')
+                .then(res => res.text())
+                .then(html => {
+                    const hasRoot = html.includes('id="root"');
+                    addCheck('HTML root元素', hasRoot, hasRoot ? '找到 root 元素' : '未找到 root 元素');
+                    
+                    // 检查脚本加载
+                    const hasScript = html.includes('src="/src/main.tsx"');
+                    addCheck('脚本引用', hasScript, hasScript ? '找到 main.tsx 引用' : '未找到脚本引用');
+                })
+                .catch(err => {
+                    addCheck('HTML 页面', false, err.message);
+                });
+        }, 100);
+        
+        // 3. 检查 Vite 开发服务器
+        fetch('http://localhost:1420/@vite/client')
+            .then(res => {
+                addCheck('Vite 客户端', res.ok, `状态码: ${res.status}`);
+            })
+            .catch(err => {
+                addCheck('Vite 客户端', false, err.message);
+            });
+            
+        // 4. 捕获全局错误
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error || event.message);
+            addCheck('运行时错误', false, event.message);
+        });
+        
+        // 5. 检查 React 是否加载
+        setTimeout(() => {
+            // 尝试直接访问页面并检查错误
+            const iframe = document.createElement('iframe');
+            iframe.src = 'http://localhost:1420/';
+            iframe.style.width = '100%';
+            iframe.style.height = '400px';
+            iframe.style.border = '1px solid #ccc';
+            iframe.style.marginTop = '20px';
+            
+            iframe.onload = () => {
+                console.log('iframe 加载完成');
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const rootEl = iframeDoc.getElementById('root');
+                    if (rootEl) {
+                        const hasContent = rootEl.innerHTML.length > 0;
+                        addCheck('React 渲染', hasContent, hasContent ? 'React 已渲染内容' : 'root 元素为空');
+                        console.log('Root 元素内容:', rootEl.innerHTML.substring(0, 200));
+                    }
+                } catch (e) {
+                    console.error('无法访问 iframe 内容:', e);
+                }
+            };
+            
+            document.body.appendChild(iframe);
+        }, 500);
+    </script>
+</body>
+</html>

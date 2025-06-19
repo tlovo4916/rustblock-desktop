@@ -24,21 +24,23 @@ pub struct DeviceProfile {
 impl DeviceProfile {
     pub fn new(name: String, device_type: DeviceType) -> Self {
         let now = chrono::Utc::now();
+        let preferred_language = match device_type {
+            DeviceType::Arduino => "arduino".to_string(),
+            DeviceType::MicroBit => "micropython".to_string(),
+            DeviceType::ESP32 => "arduino".to_string(),
+            DeviceType::RaspberryPiPico => "micropython".to_string(),
+            DeviceType::Unknown => "arduino".to_string(),
+        };
+        let baud_rate = match device_type {
+            DeviceType::Arduino => 9600,
+            _ => 115200,
+        };
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             name,
             device_type,
-            preferred_language: match device_type {
-                DeviceType::Arduino => "arduino".to_string(),
-                DeviceType::MicroBit => "micropython".to_string(),
-                DeviceType::ESP32 => "arduino".to_string(),
-                DeviceType::RaspberryPiPico => "micropython".to_string(),
-                DeviceType::Unknown => "arduino".to_string(),
-            },
-            baud_rate: match device_type {
-                DeviceType::Arduino => 9600,
-                _ => 115200,
-            },
+            preferred_language,
+            baud_rate,
             auto_reconnect: true,
             reconnect_interval_ms: 5000,
             custom_settings: HashMap::new(),

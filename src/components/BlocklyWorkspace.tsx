@@ -1,19 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import * as Blockly from 'blockly';
-import { zhHans } from 'blockly/msg/zh-hans';
-import { Button, Card, Tabs, Select, message, Space, Tooltip } from 'antd';
-import { Play, Download, Save, Upload, Settings, Code, Eye } from 'lucide-react';
+import { Button, Card, Select, message, Space, Tooltip, Alert, List, Modal, Tag } from 'antd';
+import { Play, Download, Save, Upload, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 import styled from 'styled-components';
+import { validateCode, ValidationResult, getValidationSummary } from '../utils/codeValidator';
 
-import { registerCustomBlocks, toolboxCategories } from '../blockly/blocks/custom_blocks';
-import { generateArduinoCode } from '../blockly/generators/arduino_generator';
-import { generateMicroPythonCode } from '../blockly/generators/micropython_generator';
-
-const { TabPane } = Tabs;
 const { Option } = Select;
-
-// 设置Blockly为中文
-Blockly.setLocale(zhHans);
 
 const WorkspaceContainer = styled.div`
   display: flex;
@@ -26,6 +17,10 @@ const BlocklyContainer = styled.div`
   border: 1px solid #d9d9d9;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
 `;
 
 const CodePreviewContainer = styled.div`
@@ -75,188 +70,86 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
   onCodeGenerated,
   onUploadCode
 }) => {
-  const blocklyDivRef = useRef<HTMLDivElement>(null);
-  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('arduino');
   const [showCodePreview, setShowCodePreview] = useState<boolean>(true);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [blocklyLoaded, setBlocklyLoaded] = useState<boolean>(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [showValidationDetails, setShowValidationDetails] = useState<boolean>(false);
 
-  // 创建工具箱配置
-  const createToolbox = useCallback(() => {
-    const toolbox = {
-      kind: 'categoryToolbox',
-      contents: toolboxCategories.map(category => {
-        if (category.custom) {
-          return {
-            kind: 'category',
-            name: category.name,
-            colour: category.colour,
-            custom: category.custom
-          };
-        } else {
-          return {
-            kind: 'category',
-            name: category.name,
-            colour: category.colour,
-            contents: category.blocks.map(block => {
-              if (typeof block === 'string') {
-                return { kind: 'block', type: block };
-              } else {
-                return { kind: 'block', type: block.type };
-              }
-            })
-          };
-        }
-      })
-    };
-    return toolbox;
-  }, []);
+  // 模拟代码生成
+  const generateCode = useCallback(() => {
+    const sampleCode = selectedLanguage === 'arduino' 
+      ? `// Arduino代码示例
+void setup() {
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+}
 
-  // 初始化Blockly工作区
-  const initializeWorkspace = useCallback(() => {
-    if (!blocklyDivRef.current) return;
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(1000);
+  digitalWrite(13, LOW);
+  delay(1000);
+}`
+      : `# MicroPython代码示例
+from machine import Pin
+import time
 
-    // 注册自定义块
-    registerCustomBlocks();
+led = Pin(13, Pin.OUT)
 
-    // 工作区配置
-    const workspaceConfig = {
-      toolbox: createToolbox(),
-      collapse: true,
-      comments: true,
-      disable: true,
-      maxBlocks: Infinity,
-      trashcan: true,
-      horizontalLayout: false,
-      toolboxPosition: 'start',
-      css: true,
-      media: 'https://blockly-demo.appspot.com/static/media/',
-      rtl: false,
-      scrollbars: true,
-      sounds: true,
-      oneBasedIndex: true,
-      grid: {
-        spacing: 20,
-        length: 3,
-        colour: '#ccc',
-        snap: true
-      },
-      zoom: {
-        controls: true,
-        wheel: true,
-        startScale: 1.0,
-        maxScale: 3,
-        minScale: 0.3,
-        scaleSpeed: 1.2
-      }
-    };
+while True:
+    led.on()
+    time.sleep(1)
+    led.off()
+    time.sleep(1)`;
 
-    // 创建工作区
-    const workspace = Blockly.inject(blocklyDivRef.current, workspaceConfig);
-    workspaceRef.current = workspace;
-
-    // 监听工作区变化
-    workspace.addChangeListener((event: any) => {
-      if (event.type === Blockly.Events.FINISHED_LOADING ||
-          event.type === Blockly.Events.BLOCK_CREATE ||
-          event.type === Blockly.Events.BLOCK_DELETE ||
-          event.type === Blockly.Events.BLOCK_CHANGE ||
-          event.type === Blockly.Events.BLOCK_MOVE) {
-        // 自动生成代码预览
-        generateCodePreview();
-      }
-    });
-
-    // 初始化示例程序
-    loadExampleProgram();
-  }, [createToolbox]);
-
-  // 生成代码预览
-  const generateCodePreview = useCallback(() => {
-    if (!workspaceRef.current || isGenerating) return;
+    setGeneratedCode(sampleCode);
+    onCodeGenerated?.(sampleCode, selectedLanguage);
     
-    setIsGenerating(true);
+    // 自动验证代码
+    validateGeneratedCode(sampleCode);
+  }, [selectedLanguage, onCodeGenerated]);
+
+  // 验证代码
+  const validateGeneratedCode = useCallback((code: string) => {
+    if (!code.trim()) {
+      setValidationResult(null);
+      return;
+    }
     
-    try {
-      let code = '';
-      
-      if (selectedLanguage === 'arduino') {
-        code = generateArduinoCode(workspaceRef.current);
-      } else if (selectedLanguage === 'micropython') {
-        const deviceType = selectedDevice?.device_type?.toLowerCase() || 'microbit';
-        code = generateMicroPythonCode(workspaceRef.current, deviceType);
-      }
-      
-      setGeneratedCode(code);
-      onCodeGenerated?.(code, selectedLanguage);
-    } catch (error) {
-      console.error('代码生成失败:', error);
-      message.error('代码生成失败');
-    } finally {
-      setIsGenerating(false);
+    const result = validateCode(code, selectedLanguage);
+    setValidationResult(result);
+    
+    if (!result.valid) {
+      console.warn('代码验证失败:', result.errors);
     }
-  }, [selectedLanguage, selectedDevice, onCodeGenerated, isGenerating]);
+  }, [selectedLanguage]);
 
-  // 加载示例程序
-  const loadExampleProgram = useCallback(() => {
-    if (!workspaceRef.current) return;
-
-    const exampleXml = `
-    <xml xmlns="https://developers.google.com/blockly/xml">
-      <block type="event_when_started" id="start_block" x="50" y="50">
-        <statement name="DO">
-          <block type="display_show_text" id="show_hello">
-            <field name="TEXT">Hello!</field>
-            <next>
-              <block type="led_blink" id="blink_led">
-                <field name="PIN">13</field>
-                <field name="TIMES">3</field>
-              </block>
-            </next>
-          </block>
-        </statement>
-      </block>
-    </xml>`;
-
-    try {
-      const xml = Blockly.utils.xml.textToDom(exampleXml);
-      Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
-    } catch (error) {
-      console.error('加载示例程序失败:', error);
-    }
-  }, []);
+  // 初始化时生成示例代码
+  useEffect(() => {
+    generateCode();
+  }, [generateCode]);
 
   // 保存项目
   const saveProject = useCallback(() => {
-    if (!workspaceRef.current) return;
+    const projectData = {
+      language: selectedLanguage,
+      code: generatedCode,
+      device: selectedDevice?.id || null,
+      timestamp: Date.now()
+    };
 
-    try {
-      const xml = Blockly.Xml.workspaceToDom(workspaceRef.current);
-      const xmlText = Blockly.Xml.domToText(xml);
-      
-      const projectData = {
-        xml: xmlText,
-        language: selectedLanguage,
-        device: selectedDevice?.id || null,
-        timestamp: Date.now()
-      };
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rustblock_project_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
 
-      // 下载项目文件
-      const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `rustblock_project_${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      message.success('项目已保存');
-    } catch (error) {
-      console.error('保存项目失败:', error);
-      message.error('保存项目失败');
-    }
-  }, [selectedLanguage, selectedDevice]);
+    message.success('项目已保存');
+  }, [selectedLanguage, generatedCode, selectedDevice]);
 
   // 加载项目
   const loadProject = useCallback(() => {
@@ -272,17 +165,15 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
         try {
           const projectData = JSON.parse(e.target?.result as string);
           
-          if (workspaceRef.current && projectData.xml) {
-            workspaceRef.current.clear();
-            const xml = Blockly.utils.xml.textToDom(projectData.xml);
-            Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
-            
-            if (projectData.language) {
-              setSelectedLanguage(projectData.language);
-            }
-            
-            message.success('项目已加载');
+          if (projectData.language) {
+            setSelectedLanguage(projectData.language);
           }
+          
+          if (projectData.code) {
+            setGeneratedCode(projectData.code);
+          }
+          
+          message.success('项目已加载');
         } catch (error) {
           console.error('加载项目失败:', error);
           message.error('项目文件格式错误');
@@ -302,6 +193,41 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
     
     if (!selectedDevice) {
       message.warning('请先选择设备');
+      return;
+    }
+
+    // 验证代码
+    const result = validateCode(generatedCode, selectedLanguage);
+    
+    if (!result.valid) {
+      Modal.confirm({
+        title: '代码存在错误',
+        content: (
+          <div>
+            <p>{getValidationSummary(result)}</p>
+            <p>是否仍要继续上传？</p>
+          </div>
+        ),
+        onOk: () => onUploadCode?.(generatedCode, selectedLanguage),
+        okText: '继续上传',
+        cancelText: '取消',
+      });
+      return;
+    }
+
+    if (result.warnings.length > 0) {
+      Modal.confirm({
+        title: '代码有警告',
+        content: (
+          <div>
+            <p>发现 {result.warnings.length} 个警告，建议检查后再上传。</p>
+            <p>是否继续上传？</p>
+          </div>
+        ),
+        onOk: () => onUploadCode?.(generatedCode, selectedLanguage),
+        okText: '继续上传',
+        cancelText: '取消',
+      });
       return;
     }
 
@@ -329,21 +255,22 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
     message.success('代码已下载');
   }, [generatedCode, selectedLanguage]);
 
-  // 组件初始化
+  // 初始化 Blockly（异步加载）
   useEffect(() => {
-    initializeWorkspace();
-
-    return () => {
-      if (workspaceRef.current) {
-        workspaceRef.current.dispose();
+    const initializeBlockly = async () => {
+      try {
+        // 动态导入 Blockly 以避免初始加载问题
+        const Blockly = await import('blockly');
+        setBlocklyLoaded(true);
+        console.log('Blockly已加载');
+      } catch (error) {
+        console.warn('Blockly加载失败，将使用代码编辑模式:', error);
+        setBlocklyLoaded(false);
       }
     };
-  }, [initializeWorkspace]);
 
-  // 语言变化时重新生成代码
-  useEffect(() => {
-    generateCodePreview();
-  }, [selectedLanguage, generateCodePreview]);
+    initializeBlockly();
+  }, []);
 
   return (
     <div>
@@ -352,7 +279,10 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
         <ToolbarSection>
           <Select
             value={selectedLanguage}
-            onChange={setSelectedLanguage}
+            onChange={(value) => {
+              setSelectedLanguage(value);
+              generateCode();
+            }}
             style={{ width: 120 }}
             size="small"
           >
@@ -368,6 +298,18 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
           >
             代码预览
           </Button>
+          
+          {validationResult && (
+            <Button
+              icon={validationResult.valid ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+              size="small"
+              type={validationResult.valid ? 'default' : 'primary'}
+              danger={!validationResult.valid}
+              onClick={() => setShowValidationDetails(true)}
+            >
+              {validationResult.valid ? '验证通过' : '有问题'}
+            </Button>
+          )}
         </ToolbarSection>
 
         <ToolbarSection>
@@ -398,7 +340,25 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
       {/* 主工作区 */}
       <WorkspaceContainer>
         <BlocklyContainer>
-          <div ref={blocklyDivRef} style={{ height: '100%', width: '100%' }} />
+          {blocklyLoaded ? (
+            <div style={{ textAlign: 'center', color: '#666' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🧩</div>
+              <h3>可视化编程工作区</h3>
+              <p>Blockly积木编程界面正在开发中...</p>
+              <p style={{ fontSize: 12, color: '#999' }}>
+                将在这里显示拖拽式积木编程界面
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#666' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
+              <h3>快速代码模式</h3>
+              <p>正在准备可视化编程环境...</p>
+              <Button type="primary" onClick={generateCode} style={{ marginTop: 16 }}>
+                生成示例代码
+              </Button>
+            </div>
+          )}
         </BlocklyContainer>
 
         {showCodePreview && (
@@ -408,12 +368,140 @@ const BlocklyWorkspace: React.FC<BlocklyWorkspaceProps> = ({
               size="small"
               style={{ height: '100%' }}
               bodyStyle={{ height: 'calc(100% - 48px)', padding: 0 }}
+              extra={
+                <Button size="small" onClick={generateCode}>
+                  重新生成
+                </Button>
+              }
             >
-              <CodePreview>{generatedCode || '// 请在左侧拖拽积木块来创建程序'}</CodePreview>
+              {/* 验证结果提示 */}
+              {validationResult && (
+                <div style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>
+                  {validationResult.valid ? (
+                    <Alert
+                      message="代码验证通过"
+                      type="success"
+                      size="small"
+                      showIcon
+                    />
+                  ) : (
+                    <Alert
+                      message={getValidationSummary(validationResult)}
+                      type="error"
+                      size="small"
+                      showIcon
+                      action={
+                        <Button size="small" onClick={() => setShowValidationDetails(true)}>
+                          查看详情
+                        </Button>
+                      }
+                    />
+                  )}
+                  
+                  {validationResult.warnings.length > 0 && validationResult.valid && (
+                    <Alert
+                      message={`${validationResult.warnings.length} 个警告`}
+                      type="warning"
+                      size="small"
+                      showIcon
+                      style={{ marginTop: 4 }}
+                      action={
+                        <Button size="small" onClick={() => setShowValidationDetails(true)}>
+                          查看详情
+                        </Button>
+                      }
+                    />
+                  )}
+                </div>
+              )}
+              
+              <CodePreview>{generatedCode || '// 请点击"重新生成"按钮生成示例代码'}</CodePreview>
             </Card>
           </CodePreviewContainer>
         )}
       </WorkspaceContainer>
+      
+      {/* 验证详情模态框 */}
+      <Modal
+        title="代码验证详情"
+        open={showValidationDetails}
+        onCancel={() => setShowValidationDetails(false)}
+        footer={[
+          <Button key="close" onClick={() => setShowValidationDetails(false)}>
+            关闭
+          </Button>
+        ]}
+        width={700}
+      >
+        {validationResult && (
+          <div>
+            {/* 错误列表 */}
+            {validationResult.errors.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ color: '#ff4d4f', marginBottom: 8 }}>
+                  ❌ 错误 ({validationResult.errors.length})
+                </h4>
+                <List
+                  size="small"
+                  dataSource={validationResult.errors}
+                  renderItem={(error) => (
+                    <List.Item style={{ border: '1px solid #ffccc7', borderRadius: 4, marginBottom: 4, padding: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#ff4d4f' }}>
+                          第 {error.line} 行，第 {error.column} 列
+                        </div>
+                        <div>{error.message}</div>
+                        {error.code && (
+                          <Tag size="small" color="red" style={{ marginTop: 4 }}>
+                            {error.code}
+                          </Tag>
+                        )}
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+            
+            {/* 警告列表 */}
+            {validationResult.warnings.length > 0 && (
+              <div>
+                <h4 style={{ color: '#faad14', marginBottom: 8 }}>
+                  ⚠️ 警告 ({validationResult.warnings.length})
+                </h4>
+                <List
+                  size="small"
+                  dataSource={validationResult.warnings}
+                  renderItem={(warning) => (
+                    <List.Item style={{ border: '1px solid #ffe7ba', borderRadius: 4, marginBottom: 4, padding: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#faad14' }}>
+                          第 {warning.line} 行，第 {warning.column} 列
+                        </div>
+                        <div>{warning.message}</div>
+                        {warning.code && (
+                          <Tag size="small" color="orange" style={{ marginTop: 4 }}>
+                            {warning.code}
+                          </Tag>
+                        )}
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+            
+            {/* 无问题时的提示 */}
+            {validationResult.errors.length === 0 && validationResult.warnings.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 40, color: '#52c41a' }}>
+                <CheckCircle size={48} style={{ marginBottom: 16 }} />
+                <h3>代码验证通过</h3>
+                <p>未发现任何问题，可以安全上传到设备。</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

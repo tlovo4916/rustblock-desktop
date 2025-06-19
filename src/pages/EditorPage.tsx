@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
-import { message, Select, Card, Button, Space } from 'antd';
-import { Refresh } from 'lucide-react';
+import { message, Select, Card, Button, Space, Modal } from 'antd';
+import { RefreshCw, Play, Settings } from 'lucide-react';
 import BlocklyWorkspace from '../components/BlocklyWorkspace';
+// import UploadProgress from '../components/UploadProgress';
+import { safeInvoke } from '../components/MockBackend';
 
 const { Option } = Select;
 
@@ -18,12 +19,16 @@ const EditorPage: React.FC = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUploadProgress, setShowUploadProgress] = useState(false);
+  const [preUploadCheck, setPreUploadCheck] = useState(false);
+  const [currentCode, setCurrentCode] = useState<string>('');
+  const [currentLanguage, setCurrentLanguage] = useState<string>('arduino');
 
   // 扫描设备
   const scanDevices = async () => {
     setIsLoading(true);
     try {
-      const result = await invoke<Device[]>('scan_devices');
+      const result = await safeInvoke('scan_devices');
       setDevices(result);
       if (result.length > 0 && !selectedDevice) {
         setSelectedDevice(result[0]);
@@ -36,28 +41,80 @@ const EditorPage: React.FC = () => {
     }
   };
 
-  // 上传代码到设备
-  const handleUploadCode = async (code: string, language: string) => {
+  // 预上传检查
+  const performPreUploadCheck = async (code: string, language: string) => {
     if (!selectedDevice) {
       message.error('请先选择设备');
-      return;
+      return false;
+    }
+
+    if (!code.trim()) {
+      message.error('代码不能为空');
+      return false;
     }
 
     try {
-      const uploadOptions = {
-        device_id: selectedDevice.id,
-        code: code,
-        language: language,
-        board_type: selectedDevice.device_type
-      };
+      // 检查设备连接状态
+      const deviceStatus = await safeInvoke('get_device_status', { 
+        device_id: selectedDevice.id 
+      });
+      
+      if (!deviceStatus?.ready) {
+        message.error('设备未准备就绪，请检查设备连接和驱动');
+        return false;
+      }
 
-      const result = await invoke<string>('upload_code', { options: uploadOptions });
-      message.success('代码上传成功！');
-      console.log('上传结果:', result);
+      // 检查语言兼容性
+      if (!deviceStatus.supported_languages.includes(language)) {
+        message.error(`设备不支持 ${language} 语言`);
+        return false;
+      }
+
+      // 检查上传工具
+      const tools = await safeInvoke('check_upload_tools');
+      const requiredTool = language === 'arduino' ? 'arduino-cli' : 'mpremote';
+      
+      if (!tools[requiredTool]) {
+        const install = await Modal.confirm({
+          title: '缺少上传工具',
+          content: `需要安装 ${requiredTool} 才能上传代码，是否自动安装？`,
+        });
+        
+        if (install) {
+          try {
+            await safeInvoke('install_missing_tools');
+            message.success('工具安装成功');
+          } catch (err) {
+            message.error('工具安装失败，请手动安装');
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+
+      return true;
     } catch (error) {
-      console.error('代码上传失败:', error);
-      message.error(`代码上传失败: ${error}`);
+      console.error('预上传检查失败:', error);
+      message.error('设备状态检查失败');
+      return false;
     }
+  };
+
+  // 上传代码到设备
+  const handleUploadCode = async (code: string, language: string) => {
+    // 先进行预上传检查
+    const canUpload = await performPreUploadCheck(code, language);
+    if (!canUpload) {
+      return;
+    }
+
+    // 保存当前代码和语言
+    setCurrentCode(code);
+    setCurrentLanguage(language);
+
+    // 显示上传进度
+    setShowUploadProgress(true);
   };
 
   // 代码生成回调
@@ -93,7 +150,7 @@ const EditorPage: React.FC = () => {
             </Select>
             
             <Button
-              icon={<Refresh size={16} />}
+              icon={<RefreshCw size={16} />}
               onClick={scanDevices}
               loading={isLoading}
             >
@@ -121,6 +178,21 @@ const EditorPage: React.FC = () => {
           onUploadCode={handleUploadCode}
         />
       </Card>
+
+      {/* 上传进度对话框 */}
+      {showUploadProgress && selectedDevice && (
+        <Modal
+          title={`上传代码到 ${selectedDevice.name}`}
+          open={showUploadProgress}
+          onCancel={() => {
+            setShowUploadProgress(false);
+            setCurrentCode('');
+          }}
+          footer={null}
+        >
+          <div>上传功能暂时关闭</div>
+        </Modal>
+      )}
     </div>
   );
 };

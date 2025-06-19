@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        #root {
+            background: #f0f0f0;
+            padding: 20px;
+            border: 2px solid red;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>React 挂载测试</h1>
+    <div id="root">如果你看到这个文本，说明 React 没有正确挂载</div>
+    
+    <script type="module">
+        // 测试 React 是否加载
+        import React from '/node_modules/react/index.js';
+        console.log('React loaded:', React);
+        
+        // 检查 root 元素
+        const root = document.getElementById('root');
+        console.log('Root element found:', root);
+    </script>
+</body>
+</html>

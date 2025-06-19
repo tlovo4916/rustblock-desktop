@@ -8,7 +8,7 @@ use crate::device::{
 use anyhow::Result;
 use tokio::sync::Mutex;
 use tauri::{command, State};
-use log::{info, error, warn};
+use log::{info, error};
 use std::collections::HashMap;
 
 // 全局设备检测器状态
@@ -211,31 +211,6 @@ pub async fn get_installed_drivers(
     Ok(detector.get_installed_drivers())
 }
 
-#[command]
-pub async fn check_upload_tools(
-    uploader: State<'_, DeviceUploaderState>
-) -> Result<HashMap<String, bool>, String> {
-    info!("检查上传工具");
-    
-    let uploader = uploader.lock().await;
-    uploader.check_tools().await.map_err(|e| {
-        error!("检查上传工具失败: {}", e);
-        format!("检查上传工具失败: {}", e)
-    })
-}
-
-#[command]
-pub async fn install_missing_tools(
-    uploader: State<'_, DeviceUploaderState>
-) -> Result<Vec<String>, String> {
-    info!("安装缺失的工具");
-    
-    let uploader = uploader.lock().await;
-    uploader.install_missing_tools().await.map_err(|e| {
-        error!("安装工具失败: {}", e);
-        format!("安装工具失败: {}", e)
-    })
-}
 
 #[command]
 pub async fn get_arduino_libraries(
@@ -264,82 +239,8 @@ pub async fn install_arduino_library(
     })
 }
 
-#[command]
-pub async fn connect_serial(
-    port: String,
-    baud_rate: u32,
-    serial_manager: State<'_, SerialManagerState>
-) -> Result<bool, String> {
-    info!("连接串口: {} (波特率: {})", port, baud_rate);
-    
-    let mut manager = serial_manager.lock().await;
-    manager.connect(&port, baud_rate).map_err(|e| {
-        error!("连接串口失败: {}", e);
-        format!("连接串口失败: {}", e)
-    })?;
-    
-    Ok(true)
-}
 
-#[command]
-pub async fn disconnect_serial(
-    port: String,
-    serial_manager: State<'_, SerialManagerState>
-) -> Result<bool, String> {
-    info!("断开串口: {}", port);
-    
-    let mut manager = serial_manager.lock().await;
-    manager.disconnect(&port).map_err(|e| {
-        error!("断开串口失败: {}", e);
-        format!("断开串口失败: {}", e)
-    })?;
-    
-    Ok(true)
-}
 
-#[command]
-pub async fn send_serial_data(
-    port: String,
-    data: String,
-    serial_manager: State<'_, SerialManagerState>
-) -> Result<usize, String> {
-    let mut manager = serial_manager.lock().await;
-    
-    if let Some(connection) = manager.get_connection(&port) {
-        connection.write_string(&data).map_err(|e| {
-            error!("发送串口数据失败: {}", e);
-            format!("发送串口数据失败: {}", e)
-        })
-    } else {
-        Err(format!("串口 {} 未连接", port))
-    }
-}
-
-#[command]
-pub async fn read_serial_data(
-    port: String,
-    timeout_ms: u64,
-    serial_manager: State<'_, SerialManagerState>
-) -> Result<String, String> {
-    let mut manager = serial_manager.lock().await;
-    
-    if let Some(connection) = manager.get_connection(&port) {
-        connection.read_line(timeout_ms).map_err(|e| {
-            error!("读取串口数据失败: {}", e);
-            format!("读取串口数据失败: {}", e)
-        })
-    } else {
-        Err(format!("串口 {} 未连接", port))
-    }
-}
-
-#[command]
-pub async fn get_connected_ports(
-    serial_manager: State<'_, SerialManagerState>
-) -> Result<Vec<String>, String> {
-    let manager = serial_manager.lock().await;
-    Ok(manager.connected_ports().into_iter().map(|s| s.to_string()).collect())
-}
 
 #[command]
 pub async fn refresh_device_status(
@@ -381,4 +282,6 @@ pub async fn refresh_all_devices(
     })?;
     
     Ok(devices)
-} 
+}
+
+ 

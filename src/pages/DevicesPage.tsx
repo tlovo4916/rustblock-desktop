@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { Modal, Tabs } from 'antd';
+// import SerialMonitor from '../components/SerialMonitor';
+// import DeviceConfiguration from '../components/DeviceConfiguration';
 
 interface DeviceInfo {
   id: string;
@@ -39,6 +42,9 @@ const DevicesPage: React.FC = () => {
   const [connectedPorts, setConnectedPorts] = useState<string[]>([]);
   const [driverInstallInfo, setDriverInstallInfo] = useState<string | null>(null);
   const [showDriverDialog, setShowDriverDialog] = useState(false);
+  const [showSerialMonitor, setShowSerialMonitor] = useState<{ port: string; baudRate: number } | null>(null);
+  const [showConfiguration, setShowConfiguration] = useState(false);
+  const [selectedDeviceForConfig, setSelectedDeviceForConfig] = useState<string | null>(null);
 
   const scanDevices = async () => {
     setLoading(true);
@@ -98,6 +104,12 @@ const DevicesPage: React.FC = () => {
       // 根据设备类型确定波特率
       const baudRate = getBaudRateForDevice(device.device_type);
       
+      // 检查端口是否被占用
+      const isPortBusy = await checkPortStatus(device.port);
+      if (isPortBusy) {
+        throw new Error(`端口 ${device.port} 正在被其他程序使用，请关闭相关程序后重试`);
+      }
+      
       // 连接串口
       await invoke('connect_serial', { 
         port: device.port, 
@@ -111,9 +123,16 @@ const DevicesPage: React.FC = () => {
       
       // 重新获取设备状态
       await refreshDeviceStatus(deviceId);
+      
+      // 记录连接历史
+      await recordConnectionHistory(deviceId, true);
     } catch (err) {
       console.error('连接设备失败:', err);
-      setError(`连接设备失败: ${err}`);
+      const errorMsg = getDetailedErrorMessage(err);
+      setError(errorMsg);
+      
+      // 记录连接失败历史
+      await recordConnectionHistory(deviceId, false, errorMsg);
     }
   };
 
@@ -264,6 +283,69 @@ const DevicesPage: React.FC = () => {
       case 'RaspberryPiPico': return '#eb2f96';
       default: return '#8c8c8c';
     }
+  };
+
+  // 检查端口状态
+  const checkPortStatus = async (port: string): Promise<boolean> => {
+    try {
+      // 这里可以添加端口占用检查逻辑
+      // 暂时返回 false，表示端口可用
+      return false;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // 获取详细的错误信息
+  const getDetailedErrorMessage = (error: any): string => {
+    const errorStr = error.toString();
+    
+    if (errorStr.includes('Access denied') || errorStr.includes('Permission denied')) {
+      return '权限不足：请确保当前用户有访问串口的权限，或以管理员身份运行程序';
+    }
+    
+    if (errorStr.includes('Device or resource busy')) {
+      return '设备忙碌：端口可能被其他程序占用，请关闭Arduino IDE、PlatformIO或其他串口工具后重试';
+    }
+    
+    if (errorStr.includes('No such file or directory')) {
+      return '设备未找到：设备可能已断开连接，请检查USB连接';
+    }
+    
+    if (errorStr.includes('Operation timed out')) {
+      return '连接超时：设备无响应，请检查设备状态和连接';
+    }
+    
+    return `连接失败: ${errorStr}`;
+  };
+
+  // 记录连接历史
+  const recordConnectionHistory = async (deviceId: string, success: boolean, error?: string) => {
+    try {
+      await invoke('record_connection_history', {
+        device_id: deviceId,
+        success,
+        error: error || null,
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.warn('记录连接历史失败:', err);
+    }
+  };
+
+  // 打开串口监视器
+  const openSerialMonitor = (deviceId: string) => {
+    const device = devices.find(d => d.id === deviceId);
+    if (device) {
+      const baudRate = getBaudRateForDevice(device.device_type);
+      setShowSerialMonitor({ port: device.port, baudRate });
+    }
+  };
+
+  // 打开设备配置
+  const openDeviceConfiguration = (deviceId: string) => {
+    setSelectedDeviceForConfig(deviceId);
+    setShowConfiguration(true);
   };
 
   useEffect(() => {
@@ -522,21 +604,53 @@ const DevicesPage: React.FC = () => {
                       )}
                       
                       {isConnected && (
-                        <button
-                          onClick={() => disconnectDevice(device.id)}
-                          style={{
-                            background: '#ff7875',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            fontSize: 12
-                          }}
-                        >
-                          🔌 断开连接
-                        </button>
+                        <>
+                          <button
+                            onClick={() => disconnectDevice(device.id)}
+                            style={{
+                              background: '#ff7875',
+                              color: 'white',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 12
+                            }}
+                          >
+                            🔌 断开连接
+                          </button>
+                          
+                          <button
+                            onClick={() => openSerialMonitor(device.id)}
+                            style={{
+                              background: '#52c41a',
+                              color: 'white',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 12
+                            }}
+                          >
+                            📊 串口监视器
+                          </button>
+                        </>
                       )}
+                      
+                      <button
+                        onClick={() => openDeviceConfiguration(device.id)}
+                        style={{
+                          background: '#faad14',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          fontSize: 12
+                        }}
+                      >
+                        ⚙️ 配置
+                      </button>
                       
                       <button
                         onClick={() => refreshDeviceStatus(device.id)}
@@ -655,6 +769,39 @@ const DevicesPage: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* 串口监视器模态框 */}
+      {showSerialMonitor && (
+        <Modal
+          title={`串口监视器 - ${showSerialMonitor.port}`}
+          open={true}
+          onCancel={() => setShowSerialMonitor(null)}
+          footer={null}
+          width={800}
+          height={600}
+          style={{ height: '600px' }}
+          bodyStyle={{ height: '500px', padding: 0 }}
+        >
+          <div>串口监视器功能暂时关闭</div>
+        </Modal>
+      )}
+      
+      {/* 设备配置模态框 */}
+      <Modal
+        title="设备配置管理"
+        open={showConfiguration}
+        onCancel={() => {
+          setShowConfiguration(false);
+          setSelectedDeviceForConfig(null);
+        }}
+        footer={null}
+        width={1000}
+        height={700}
+        style={{ height: '700px' }}
+        bodyStyle={{ height: '600px', padding: 0 }}
+      >
+        <div>设备配置功能暂时关闭</div>
+      </Modal>
     </div>
   );
 };
