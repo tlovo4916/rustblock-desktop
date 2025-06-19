@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, Card, Button, Modal } from 'antd';
-import { Settings } from 'lucide-react';
+import { Settings, Wrench } from 'lucide-react';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
 
@@ -121,7 +121,7 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <div>
                     <Button
-                      icon={<Tool size={16} />}
+                      icon={<Wrench size={16} />}
                       onClick={() => setShowToolStatus(true)}
                     >
                       检查系统工具状态
@@ -188,7 +188,7 @@ const SettingsPage: React.FC = () => {
         style={{ height: '600px' }}
         bodyStyle={{ height: '500px', padding: 0 }}
       >
-        <ToolStatus onClose={() => setShowToolStatus(false)} />
+        <ToolStatus />
       </Modal>
     </div>
   );
