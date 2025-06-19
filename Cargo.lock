@@ -3536,6 +3536,7 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "env_logger",
+ "futures-util",
  "lazy_static",
  "log",
  "regex",

@@ -76,6 +76,15 @@ pub struct DeepSeekMessage {
     pub content: String,
 }
 
+use futures_util::StreamExt;
+use tauri::{Manager, Emitter};
+
+#[derive(Clone, Serialize)]
+struct StreamEvent {
+    chunk: String,
+    finished: bool,
+}
+
 #[tauri::command]
 pub async fn chat_with_deepseek(
     api_key: String,
@@ -119,6 +128,91 @@ pub async fn chat_with_deepseek(
     } else {
         Err("API响应中没有内容".to_string())
     }
+}
+
+// 流式响应版本
+#[tauri::command]
+pub async fn chat_with_deepseek_stream(
+    window: tauri::Window,
+    api_key: String,
+    api_url: String,
+    messages: Vec<DeepSeekMessage>,
+    event_name: String,
+) -> Result<(), String> {
+    use log::info;
+    info!("调用DeepSeek API (流式)...");
+    
+    let client = reqwest::Client::new();
+    
+    let request_body = serde_json::json!({
+        "model": "deepseek-chat",
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "stream": true,  // 启用流式响应
+    });
+    
+    let response = client
+        .post(format!("{}/v1/chat/completions", api_url))
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&request_body)
+        .send()
+        .await
+        .map_err(|e| format!("网络请求失败: {}", e))?;
+    
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("API请求失败 ({}): {}", status, error_text));
+    }
+    
+    // 处理流式响应
+    let mut stream = response.bytes_stream();
+    let mut buffer = String::new();
+    
+    while let Some(chunk) = stream.next().await {
+        match chunk {
+            Ok(bytes) => {
+                let text = String::from_utf8_lossy(&bytes);
+                buffer.push_str(&text);
+                
+                // 处理 SSE (Server-Sent Events) 格式
+                while let Some(line_end) = buffer.find('\n') {
+                    let line = buffer[..line_end].trim().to_string();
+                    buffer = buffer[line_end + 1..].to_string();
+                    
+                    if line.starts_with("data: ") {
+                        let data = &line[6..];
+                        if data == "[DONE]" {
+                            // 流结束
+                            window.emit(&event_name, StreamEvent {
+                                chunk: String::new(),
+                                finished: true,
+                            }).map_err(|e| format!("发送事件失败: {}", e))?;
+                            break;
+                        }
+                        
+                        // 解析 JSON
+                        if let Ok(json) = serde_json::from_str::<serde_json::Value>(data) {
+                            if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
+                                // 发送内容片段
+                                window.emit(&event_name, StreamEvent {
+                                    chunk: content.to_string(),
+                                    finished: false,
+                                }).map_err(|e| format!("发送事件失败: {}", e))?;
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                return Err(format!("读取流失败: {}", e));
+            }
+        }
+    }
+    
+    Ok(())
 }
 
 // 测试API连接

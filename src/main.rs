@@ -32,6 +32,10 @@ async fn main() {
     let (performance_monitor, global_cache, task_manager) = commands::performance::create_performance_states();
     
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_http::init())
         .manage(DeviceDetectorState::new(DeviceDetector::new()))
         .manage(DeviceUploaderState::new(DeviceUploader::new()))
         .manage(SerialManagerState::new(SerialManager::new()))
@@ -77,6 +81,7 @@ async fn main() {
             commands::ai::analyze_code,
             commands::ai::configure_ai_service,
             commands::ai::chat_with_deepseek,
+            commands::ai::chat_with_deepseek_stream,
             commands::ai::test_deepseek_connection,
             // 增强AI命令
             commands::enhanced_ai::optimize_code,

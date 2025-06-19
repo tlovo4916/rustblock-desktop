@@ -13,6 +13,7 @@ interface ChatMessage {
   content: string;
 }
 
+
 const AIPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -25,7 +26,10 @@ const AIPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
+  const [typingContent, setTypingContent] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 加载API配置
   useEffect(() => {
@@ -48,13 +52,37 @@ const AIPage: React.FC = () => {
     window.addEventListener('ai-config-updated', handleConfigUpdate);
     return () => {
       window.removeEventListener('ai-config-updated', handleConfigUpdate);
+      // 清理打字效果定时器
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, []);
 
   // 自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typingContent]);
+
+  // 打字机效果函数
+  const typeWriterEffect = (text: string, onComplete: () => void) => {
+    setIsTyping(true);
+    setTypingContent('');
+    let index = 0;
+    
+    const typeNext = () => {
+      if (index < text.length) {
+        setTypingContent(prev => prev + text[index]);
+        index++;
+        typingTimeoutRef.current = setTimeout(typeNext, 30); // 调整打字速度
+      } else {
+        setIsTyping(false);
+        onComplete();
+      }
+    };
+    
+    typeNext();
+  };
 
   // 发送消息到DeepSeek API
   const sendMessage = async () => {
@@ -93,17 +121,21 @@ const AIPage: React.FC = () => {
         messages: chatMessages
       });
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      setLoading(false);
+      
+      // 使用打字机效果显示响应
+      typeWriterEffect(response, () => {
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: response,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        setTypingContent('');
+      });
     } catch (error) {
       console.error('发送消息失败:', error);
       message.error(`发送失败: ${error}`);
-    } finally {
       setLoading(false);
     }
   };
@@ -183,7 +215,31 @@ const AIPage: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {loading && (
+              {isTyping && (
+                <div
+                  style={{
+                    marginBottom: 16,
+                    display: 'flex',
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  <div style={{
+                    background: '#f0f0f0',
+                    color: 'black',
+                    padding: 12,
+                    borderRadius: 8,
+                    maxWidth: '80%',
+                    wordBreak: 'break-word'
+                  }}>
+                    <strong>🤖 AI助手:</strong>
+                    <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                      {typingContent}
+                      <span style={{ opacity: 0.5 }}>|</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {loading && !isTyping && (
                 <div style={{ textAlign: 'center', color: '#8c8c8c' }}>
                   AI正在思考中...
                 </div>
