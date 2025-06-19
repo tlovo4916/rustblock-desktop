@@ -24,6 +24,7 @@ const AIPage: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
   const [typingContent, setTypingContent] = useState('');
@@ -74,7 +75,7 @@ const AIPage: React.FC = () => {
       if (index < text.length) {
         setTypingContent(prev => prev + text[index]);
         index++;
-        typingTimeoutRef.current = setTimeout(typeNext, 30); // 调整打字速度
+        typingTimeoutRef.current = setTimeout(typeNext, 15); // 加快打字速度
       } else {
         setIsTyping(false);
         onComplete();
@@ -102,19 +103,22 @@ const AIPage: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
+    setLoadingStatus('正在连接AI...');
 
     try {
       // 准备消息历史
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
-          content: '你是一个友好的编程教学助手，专门帮助10岁以下的小朋友学习编程。请用简单易懂的语言解释概念，多使用比喻和例子。回答要活泼有趣，使用适当的emoji表情。'
+          content: '你是编程助手，简洁回答，多用emoji。'
         },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
+        // 只保留最近5条消息历史
+        ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: inputValue }
       ];
 
       // 通过Tauri后端调用API
+      setLoadingStatus('AI正在思考...');
       const response = await safeInvoke<string>('chat_with_deepseek', {
         apiKey,
         apiUrl,
@@ -122,6 +126,7 @@ const AIPage: React.FC = () => {
       });
 
       setLoading(false);
+      setLoadingStatus('');
       
       // 使用打字机效果显示响应
       typeWriterEffect(response, () => {
@@ -137,6 +142,7 @@ const AIPage: React.FC = () => {
       console.error('发送消息失败:', error);
       message.error(`发送失败: ${error}`);
       setLoading(false);
+      setLoadingStatus('');
     }
   };
 
@@ -150,6 +156,12 @@ const AIPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       <h1>AI 编程助手</h1>
       <div style={{ 
         background: 'white', 
@@ -240,8 +252,23 @@ const AIPage: React.FC = () => {
                 </div>
               )}
               {loading && !isTyping && (
-                <div style={{ textAlign: 'center', color: '#8c8c8c' }}>
-                  AI正在思考中...
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#8c8c8c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}>
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid #f3f3f3',
+                    borderTop: '2px solid #1890ff',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  {loadingStatus || 'AI正在思考中...'}
                 </div>
               )}
               <div ref={messagesEndRef} />

@@ -94,13 +94,18 @@ pub async fn chat_with_deepseek(
     use log::info;
     info!("调用DeepSeek API...");
     
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))  // 30秒超时
+        .build()
+        .map_err(|e| format!("创建HTTP客户端失败: {}", e))?;
     
     let request_body = serde_json::json!({
         "model": "deepseek-chat",
         "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 1000,
+        "temperature": 0.3,  // 降低temperature加快响应
+        "max_tokens": 300,   // 减少最大token数加快响应
+        "top_p": 0.9,        // 添加top_p参数优化质量
+        "frequency_penalty": 0.1,  // 减少重复
     });
     
     let response = client
