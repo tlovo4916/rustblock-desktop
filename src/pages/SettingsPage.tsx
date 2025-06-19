@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Tabs, Card, Button, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Tabs, Card, Button, Modal, message } from 'antd';
 import { Settings, Wrench } from 'lucide-react';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
@@ -8,6 +8,44 @@ const { TabPane } = Tabs;
 
 const SettingsPage: React.FC = () => {
   const [showToolStatus, setShowToolStatus] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
+  const [loading, setLoading] = useState(false);
+
+  // 从localStorage加载配置
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
+    const savedApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
+    setApiKey(savedApiKey);
+    setApiUrl(savedApiUrl);
+  }, []);
+
+  // 保存AI配置
+  const saveAIConfig = async () => {
+    if (!apiKey.trim()) {
+      message.error('请输入API密钥');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 保存到localStorage
+      localStorage.setItem('deepseek_api_key', apiKey);
+      localStorage.setItem('deepseek_api_url', apiUrl);
+      
+      // 触发一个自定义事件，让其他组件知道配置已更新
+      window.dispatchEvent(new CustomEvent('ai-config-updated', {
+        detail: { apiKey, apiUrl }
+      }));
+      
+      message.success('AI配置保存成功！现在可以使用AI助手了');
+    } catch (error) {
+      console.error('保存配置失败:', error);
+      message.error('保存配置失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ padding: 24 }}>
@@ -31,6 +69,8 @@ const SettingsPage: React.FC = () => {
                       }}
                       placeholder="输入你的DeepSeek API密钥..."
                       type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
                     />
                   </div>
                   <div>
@@ -42,19 +82,24 @@ const SettingsPage: React.FC = () => {
                         border: '1px solid #d9d9d9',
                         borderRadius: 4
                       }}
-                      defaultValue="https://api.deepseek.com"
+                      value={apiUrl}
+                      onChange={(e) => setApiUrl(e.target.value)}
                     />
                   </div>
-                  <button style={{
-                    background: '#1890ff',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    width: 'fit-content'
-                  }}>
-                    保存AI配置
+                  <button 
+                    style={{
+                      background: loading ? '#d9d9d9' : '#1890ff',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: 4,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      width: 'fit-content'
+                    }}
+                    onClick={saveAIConfig}
+                    disabled={loading}
+                  >
+                    {loading ? '保存中...' : '保存AI配置'}
                   </button>
                 </div>
               </div>
