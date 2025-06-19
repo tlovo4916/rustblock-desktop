@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Card, Button, Modal, message } from 'antd';
 import { Settings, Wrench } from 'lucide-react';
+import { safeInvoke } from '../utils/tauri';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
 
@@ -11,6 +12,7 @@ const SettingsPage: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   // 从localStorage加载配置
   useEffect(() => {
@@ -44,6 +46,33 @@ const SettingsPage: React.FC = () => {
       message.error('保存配置失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 测试API连接
+  const testConnection = async () => {
+    if (!apiKey.trim()) {
+      message.error('请输入API密钥');
+      return;
+    }
+
+    setTesting(true);
+    try {
+      const isConnected = await safeInvoke<boolean>('test_deepseek_connection', {
+        apiKey,
+        apiUrl
+      });
+
+      if (isConnected) {
+        message.success('API连接测试成功！');
+      } else {
+        message.error('API连接测试失败，请检查密钥和网络连接');
+      }
+    } catch (error) {
+      console.error('测试连接失败:', error);
+      message.error(`测试失败: ${error}`);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -86,21 +115,36 @@ const SettingsPage: React.FC = () => {
                       onChange={(e) => setApiUrl(e.target.value)}
                     />
                   </div>
-                  <button 
-                    style={{
-                      background: loading ? '#d9d9d9' : '#1890ff',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: 4,
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      width: 'fit-content'
-                    }}
-                    onClick={saveAIConfig}
-                    disabled={loading}
-                  >
-                    {loading ? '保存中...' : '保存AI配置'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button 
+                      style={{
+                        background: loading ? '#d9d9d9' : '#1890ff',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: 4,
+                        cursor: loading ? 'not-allowed' : 'pointer'
+                      }}
+                      onClick={saveAIConfig}
+                      disabled={loading}
+                    >
+                      {loading ? '保存中...' : '保存AI配置'}
+                    </button>
+                    <button 
+                      style={{
+                        background: testing ? '#d9d9d9' : '#52c41a',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: 4,
+                        cursor: testing ? 'not-allowed' : 'pointer'
+                      }}
+                      onClick={testConnection}
+                      disabled={testing || !apiKey}
+                    >
+                      {testing ? '测试中...' : '测试连接'}
+                    </button>
+                  </div>
                 </div>
               </div>
               

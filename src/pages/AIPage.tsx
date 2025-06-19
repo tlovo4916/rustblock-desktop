@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
+import { safeInvoke } from '../utils/tauri';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface ChatMessage {
+  role: string;
+  content: string;
 }
 
 const AIPage: React.FC = () => {
@@ -70,42 +76,33 @@ const AIPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${apiUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+      // 准备消息历史
+      const chatMessages: ChatMessage[] = [
+        {
+          role: 'system',
+          content: '你是一个友好的编程教学助手，专门帮助10岁以下的小朋友学习编程。请用简单易懂的语言解释概念，多使用比喻和例子。回答要活泼有趣，使用适当的emoji表情。'
         },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            {
-              role: 'system',
-              content: '你是一个友好的编程教学助手，专门帮助10岁以下的小朋友学习编程。请用简单易懂的语言解释概念，多使用比喻和例子。回答要活泼有趣，使用适当的emoji表情。'
-            },
-            ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: inputValue }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000
-        })
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+        { role: 'user', content: inputValue }
+      ];
+
+      // 通过Tauri后端调用API
+      const response = await safeInvoke<string>('chat_with_deepseek', {
+        apiKey,
+        apiUrl,
+        messages: chatMessages
       });
 
-      if (!response.ok) {
-        throw new Error(`API请求失败: ${response.status}`);
-      }
-
-      const data = await response.json();
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.choices[0].message.content,
+        content: response,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('发送消息失败:', error);
-      message.error('发送失败，请检查网络连接和API配置');
+      message.error(`发送失败: ${error}`);
     } finally {
       setLoading(false);
     }

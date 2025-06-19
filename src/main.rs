@@ -76,6 +76,8 @@ async fn main() {
             commands::ai::chat_with_ai,
             commands::ai::analyze_code,
             commands::ai::configure_ai_service,
+            commands::ai::chat_with_deepseek,
+            commands::ai::test_deepseek_connection,
             // 增强AI命令
             commands::enhanced_ai::optimize_code,
             commands::enhanced_ai::generate_learning_path,

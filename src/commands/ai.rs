@@ -1,74 +1,165 @@
-use crate::ai::{AIService, ChatRequest, ChatResponse, CodeAnalysisRequest, CodeAnalysisResponse};
+use crate::ai::{AIService, ChatMessage, ChatRequest, ChatResponse, CodeAnalysisRequest, CodeAnalysisResponse};
+use std::sync::Arc;
 use tokio::sync::Mutex;
-use tauri::{command, State};
-use log::{info, error};
+use tauri::State;
+use serde::{Deserialize, Serialize};
 
-// 全局AI服务状态
-pub type AIServiceState = Mutex<Option<AIService>>;
+pub struct AIServiceState {
+    service: Arc<Mutex<Option<AIService>>>,
+}
 
-#[command]
+impl AIServiceState {
+    pub fn new(service: Option<AIService>) -> Self {
+        Self {
+            service: Arc::new(Mutex::new(service)),
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn chat_with_ai(
-    request: ChatRequest,
-    ai_service: State<'_, AIServiceState>
+    state: State<'_, AIServiceState>,
+    messages: Vec<ChatMessage>,
+    max_tokens: Option<u32>,
+    temperature: Option<f32>,
 ) -> Result<ChatResponse, String> {
-    info!("前端请求AI对话");
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("AI服务未配置，请先在设置中配置API密钥")?;
     
-    let ai_service = ai_service.lock().await;
+    let request = ChatRequest {
+        messages,
+        max_tokens,
+        temperature,
+    };
     
-    match ai_service.as_ref() {
-        Some(service) => {
-            service.chat_with_ai(request).await.map_err(|e| {
-                error!("AI对话失败: {}", e);
-                format!("AI对话失败: {}", e)
-            })
-        },
-        None => {
-            error!("AI服务未初始化");
-            Err("AI服务未配置，请先在设置中配置API密钥".to_string())
-        }
-    }
+    service.chat_with_ai(request).await
+        .map_err(|e| e.to_string())
 }
 
-#[command]
+#[tauri::command]
 pub async fn analyze_code(
-    request: CodeAnalysisRequest,
-    ai_service: State<'_, AIServiceState>
+    state: State<'_, AIServiceState>,
+    code: String,
+    language: String,
+    device_type: String,
+    error_message: Option<String>,
 ) -> Result<CodeAnalysisResponse, String> {
-    info!("前端请求代码分析");
+    let service_lock = state.service.lock().await;
+    let service = service_lock.as_ref().ok_or("AI服务未配置，请先在设置中配置API密钥")?;
     
-    let ai_service = ai_service.lock().await;
+    let request = CodeAnalysisRequest {
+        code,
+        language,
+        device_type,
+        error_message,
+    };
     
-    match ai_service.as_ref() {
-        Some(service) => {
-            service.analyze_code(request).await.map_err(|e| {
-                error!("代码分析失败: {}", e);
-                format!("代码分析失败: {}", e)
-            })
-        },
-        None => {
-            error!("AI服务未初始化");
-            Err("AI服务未配置，请先在设置中配置API密钥".to_string())
-        }
-    }
+    service.analyze_code(request).await
+        .map_err(|e| e.to_string())
 }
 
-#[command]
+#[tauri::command]
 pub async fn configure_ai_service(
+    state: State<'_, AIServiceState>,
     api_key: String,
     base_url: Option<String>,
-    ai_service: State<'_, AIServiceState>
+) -> Result<(), String> {
+    let mut service_lock = state.service.lock().await;
+    *service_lock = Some(AIService::new(api_key, base_url));
+    Ok(())
+}
+
+// DeepSeek专用命令
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeepSeekMessage {
+    pub role: String,
+    pub content: String,
+}
+
+#[tauri::command]
+pub async fn chat_with_deepseek(
+    api_key: String,
+    api_url: String,
+    messages: Vec<DeepSeekMessage>,
 ) -> Result<String, String> {
-    info!("配置AI服务");
+    use log::info;
+    info!("调用DeepSeek API...");
     
-    let mut ai_service = ai_service.lock().await;
+    let client = reqwest::Client::new();
     
-    if api_key.trim().is_empty() {
-        return Err("API密钥不能为空".to_string());
+    let request_body = serde_json::json!({
+        "model": "deepseek-chat",
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 1000,
+    });
+    
+    let response = client
+        .post(format!("{}/v1/chat/completions", api_url))
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&request_body)
+        .send()
+        .await
+        .map_err(|e| format!("网络请求失败: {}", e))?;
+    
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("API请求失败 ({}): {}", status, error_text));
     }
     
-    let new_service = AIService::new(api_key, base_url);
-    *ai_service = Some(new_service);
+    let response_body: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("解析响应失败: {}", e))?;
     
-    info!("AI服务配置成功");
-    Ok("AI服务配置成功".to_string())
-} 
+    if let Some(content) = response_body["choices"][0]["message"]["content"].as_str() {
+        Ok(content.to_string())
+    } else {
+        Err("API响应中没有内容".to_string())
+    }
+}
+
+// 测试API连接
+#[tauri::command]
+pub async fn test_deepseek_connection(
+    api_key: String,
+    api_url: String,
+) -> Result<bool, String> {
+    use log::info;
+    info!("测试DeepSeek API连接...");
+    
+    let client = reqwest::Client::new();
+    
+    let test_messages = vec![
+        DeepSeekMessage {
+            role: "system".to_string(),
+            content: "You are a helpful assistant.".to_string(),
+        },
+        DeepSeekMessage {
+            role: "user".to_string(),
+            content: "Say 'Hello' if you can hear me.".to_string(),
+        },
+    ];
+    
+    let request_body = serde_json::json!({
+        "model": "deepseek-chat",
+        "messages": test_messages,
+        "temperature": 0.7,
+        "max_tokens": 10,
+    });
+    
+    let response = client
+        .post(format!("{}/v1/chat/completions", api_url))
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&request_body)
+        .send()
+        .await;
+    
+    match response {
+        Ok(res) => Ok(res.status().is_success()),
+        Err(_) => Ok(false),
+    }
+}

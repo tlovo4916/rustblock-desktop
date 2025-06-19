@@ -5,6 +5,7 @@ import DevicesPage from "./pages/DevicesPage";
 import AIPage from "./pages/AIPage";
 import EnhancedAIPage from "./pages/EnhancedAIPage";
 import SettingsPage from "./pages/SettingsPage";
+import DebugPage from "./pages/DebugPage";
 
 // 简化的侧边栏组件
 const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; currentPage: string }> = ({ onNavigate, currentPage }) => {
@@ -15,6 +16,7 @@ const SidebarWithNavigation: React.FC<{ onNavigate: (page: string) => void; curr
     { key: 'ai', label: '🤖 AI助手' },
     { key: 'enhanced-ai', label: '🧠 智能助手' },
     { key: 'settings', label: '⚙️ 设置' },
+    { key: 'debug', label: '🐛 调试' },
   ];
 
   return (
@@ -82,6 +84,8 @@ const App: React.FC<AppProps> = () => {
         return <EnhancedAIPage />;
       case "settings":
         return <SettingsPage />;
+      case "debug":
+        return <DebugPage />;
       default:
         return <HomePage />;
     }
