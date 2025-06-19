@@ -460,7 +460,7 @@ const DevicesPage: React.FC = () => {
                   <div
                     key={device.id}
                     style={{
-                      border: `2px solid ${isReady ? '#52c41a' : driverInstalled ? '#faad14' : '#ff4d4f'}`,
+                      border: `2px solid ${device.device_type === 'Unknown' ? '#8c8c8c' : isReady ? '#52c41a' : driverInstalled ? '#faad14' : '#ff4d4f'}`,
                       borderRadius: 12,
                       padding: 20,
                       background: isConnected ? '#f6ffed' : 'white',
@@ -516,11 +516,13 @@ const DevicesPage: React.FC = () => {
                       <div style={{ textAlign: 'right' }}>
                         <div
                           style={{
-                            background: isReady
-                              ? '#52c41a'
-                              : driverInstalled
-                                ? '#faad14'
-                                : '#ff4d4f',
+                            background: device.device_type === 'Unknown'
+                              ? '#8c8c8c'
+                              : isReady
+                                ? '#52c41a'
+                                : driverInstalled
+                                  ? '#faad14'
+                                  : '#ff4d4f',
                             color: 'white',
                             padding: '4px 8px',
                             borderRadius: 4,
@@ -528,7 +530,13 @@ const DevicesPage: React.FC = () => {
                             marginBottom: 4,
                           }}
                         >
-                          {isReady ? '✅ 就绪' : driverInstalled ? '⚠️ 需要配置' : '❌ 需要驱动'}
+                          {device.device_type === 'Unknown'
+                            ? '❓ 未知设备'
+                            : isReady
+                              ? '✅ 就绪'
+                              : driverInstalled
+                                ? '⚠️ 需要配置'
+                                : '❌ 需要驱动'}
                         </div>
                         {isConnected && (
                           <div
@@ -580,8 +588,8 @@ const DevicesPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* 编程语言支持 */}
-                    {status && (
+                    {/* 编程语言支持 - 只对已知设备类型显示 */}
+                    {status && device.device_type !== 'Unknown' && (
                       <div
                         style={{
                           background: '#f0f9ff',
@@ -626,9 +634,36 @@ const DevicesPage: React.FC = () => {
                       </div>
                     )}
 
+                    {/* 未知设备类型提示 */}
+                    {device.device_type === 'Unknown' && (
+                      <div
+                        style={{
+                          background: '#fff7e6',
+                          padding: 12,
+                          borderRadius: 6,
+                          marginBottom: 12,
+                          fontSize: 12,
+                          border: '1px solid #ffd591',
+                        }}
+                      >
+                        <div style={{ color: '#d46b08', marginBottom: 4, fontWeight: 'bold' }}>
+                          ⚠️ 未知设备类型
+                        </div>
+                        <div style={{ color: '#666', fontSize: 11 }}>
+                          该设备未被识别为支持的开发板类型。
+                          <br />
+                          • 无法自动安装驱动程序
+                          <br />
+                          • 无法推荐编程语言
+                          <br />
+                          • 请确认设备是否为 Arduino、ESP32、micro:bit 等支持的设备
+                        </div>
+                      </div>
+                    )}
+
                     {/* 操作按钮 */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {!driverInstalled && (
+                      {!driverInstalled && device.device_type !== 'Unknown' && (
                         <button
                           onClick={() => installDriver(device.id)}
                           style={{
@@ -645,7 +680,7 @@ const DevicesPage: React.FC = () => {
                         </button>
                       )}
 
-                      {driverInstalled && !isConnected && (
+                      {driverInstalled && !isConnected && device.device_type !== 'Unknown' && (
                         <button
                           onClick={() => connectDevice(device.id)}
                           style={{
@@ -662,7 +697,7 @@ const DevicesPage: React.FC = () => {
                         </button>
                       )}
 
-                      {isConnected && (
+                      {isConnected && device.device_type !== 'Unknown' && (
                         <>
                           <button
                             onClick={() => disconnectDevice(device.id)}
@@ -696,20 +731,22 @@ const DevicesPage: React.FC = () => {
                         </>
                       )}
 
-                      <button
-                        onClick={() => openDeviceConfiguration(device.id)}
-                        style={{
-                          background: '#faad14',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: 4,
-                          cursor: 'pointer',
-                          fontSize: 12,
-                        }}
-                      >
-                        ⚙️ 配置
-                      </button>
+                      {device.device_type !== 'Unknown' && (
+                        <button
+                          onClick={() => openDeviceConfiguration(device.id)}
+                          style={{
+                            background: '#faad14',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            fontSize: 12,
+                          }}
+                        >
+                          ⚙️ 配置
+                        </button>
+                      )}
 
                       <button
                         onClick={() => refreshDeviceStatus(device.id)}
