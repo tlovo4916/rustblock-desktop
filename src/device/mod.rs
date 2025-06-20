@@ -43,7 +43,7 @@ impl DeviceInfo {
         let name = Self::generate_device_name(&device_type, &port);
         
         Self {
-            id: format!("{}_{}", port, chrono::Utc::now().timestamp()),
+            id: Self::generate_device_id(&port, vendor_id, product_id),
             name,
             device_type,
             port,
@@ -72,6 +72,19 @@ impl DeviceInfo {
             (Some(0x2e8a), Some(0x0005)) => DeviceType::RaspberryPiPico,
             (Some(0x2e8a), Some(0x000a)) => DeviceType::RaspberryPiPico,
             _ => DeviceType::Unknown,
+        }
+    }
+    
+    fn generate_device_id(port: &str, vendor_id: Option<u16>, product_id: Option<u16>) -> String {
+        // 生成基于端口和硬件ID的稳定唯一标识符
+        match (vendor_id, product_id) {
+            (Some(vid), Some(pid)) => {
+                format!("{}_{:04x}_{:04x}", port.replace("/dev/", "").replace(".", "_"), vid, pid)
+            },
+            _ => {
+                // 对于没有VID/PID的设备，使用端口名作为ID
+                port.replace("/dev/", "").replace(".", "_")
+            }
         }
     }
     

@@ -1,7 +1,7 @@
 use super::{DeviceInfo, DeviceType, driver::DriverManager, connection_manager::ConnectionManager};
 use anyhow::{Result, anyhow};
 use serialport::{SerialPortInfo, SerialPortType};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use log::{debug, info, warn};
 use std::sync::Arc;
 
@@ -33,16 +33,73 @@ impl DeviceDetector {
         
         self.devices.clear();
         let mut detected_devices = Vec::new();
+        let mut seen_hardware = HashSet::new();
+        let mut filtered_ports = Vec::new();
 
+        // 首先过滤掉不需要的端口
         for port in ports {
             debug!("发现串口: {}", port.port_name);
             
+            let port_name_lower = port.port_name.to_lowercase();
+            
+            // 过滤掉调试端口和蓝牙端口
+            if port_name_lower.contains("debug-console") ||
+               port_name_lower.contains("bluetooth-incoming-port") ||
+               port_name_lower.contains("ams") ||
+               port_name_lower.contains("airpods") {
+                info!("跳过系统端口: {}", port.port_name);
+                continue;
+            }
+            
+            // 对于macOS的成对端口（/dev/cu.* 和 /dev/tty.*），优先选择cu端口
+            if port.port_name.starts_with("/dev/tty.") {
+                let cu_port = port.port_name.replace("/dev/tty.", "/dev/cu.");
+                // 检查是否存在对应的cu端口
+                let has_cu_port = serialport::available_ports()
+                    .unwrap_or_default()
+                    .iter()
+                    .any(|p| p.port_name == cu_port);
+                
+                if has_cu_port {
+                    info!("跳过tty端口，优先使用cu端口: {} -> {}", port.port_name, cu_port);
+                    continue;
+                }
+            }
+            
+            filtered_ports.push(port);
+        }
+
+        for port in filtered_ports {
             let (vendor_id, product_id) = match &port.port_type {
                 SerialPortType::UsbPort(usb_info) => {
                     (Some(usb_info.vid), Some(usb_info.pid))
                 },
                 _ => (None, None),
             };
+
+            // 创建硬件标识符用于去重检查
+            let hardware_id = match (vendor_id, product_id) {
+                (Some(vid), Some(pid)) => format!("{:04x}:{:04x}", vid, pid),
+                _ => {
+                    // 对于没有VID/PID的设备，使用端口基本名称（去掉cu/tty前缀）
+                    let base_name = if port.port_name.starts_with("/dev/cu.") {
+                        port.port_name.strip_prefix("/dev/cu.").unwrap_or(&port.port_name)
+                    } else if port.port_name.starts_with("/dev/tty.") {
+                        port.port_name.strip_prefix("/dev/tty.").unwrap_or(&port.port_name)
+                    } else {
+                        &port.port_name
+                    };
+                    base_name.to_string()
+                }
+            };
+
+            // 检查是否已经检测到相同的硬件设备
+            if seen_hardware.contains(&hardware_id) {
+                info!("跳过重复设备: {} (硬件ID: {})", port.port_name, hardware_id);
+                continue;
+            }
+            
+            seen_hardware.insert(hardware_id.clone());
 
             let mut device_info = DeviceInfo::new(
                 port.port_name.clone(),
@@ -65,11 +122,16 @@ impl DeviceDetector {
                       device_info.name, device_info.device_type);
             }
             
-            self.devices.insert(device_info.id.clone(), device_info.clone());
-            detected_devices.push(device_info);
+            // 检查设备ID是否已存在（额外的安全检查）
+            if !self.devices.contains_key(&device_info.id) {
+                self.devices.insert(device_info.id.clone(), device_info.clone());
+                detected_devices.push(device_info);
+            } else {
+                warn!("设备ID冲突，跳过: {}", device_info.id);
+            }
         }
 
-        info!("共发现 {} 个设备", detected_devices.len());
+        info!("扫描完成，共发现 {} 个唯一设备", detected_devices.len());
         Ok(detected_devices)
     }
 

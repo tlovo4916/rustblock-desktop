@@ -57,11 +57,17 @@ const DevicesPage: React.FC = () => {
       console.log('开始扫描设备...');
       const result = await invoke<DeviceInfo[]>('scan_devices');
       console.log('扫描结果:', result);
-      setDevices(result);
+      
+      // 确保设备列表去重，基于设备ID
+      const uniqueDevices = result.filter((device, index, self) => 
+        index === self.findIndex(d => d.id === device.id)
+      );
+      console.log('去重后设备:', uniqueDevices);
+      setDevices(uniqueDevices);
 
       // 获取每个设备的详细状态
       const statusMap = new Map<string, DeviceStatus>();
-      for (const device of result) {
+      for (const device of uniqueDevices) {
         try {
           const status = await invoke<DeviceStatus>('get_device_status', { deviceId: device.id });
           if (status) {
@@ -76,7 +82,7 @@ const DevicesPage: React.FC = () => {
       // 更新已连接端口列表
       await updateConnectedPorts();
 
-      if (result.length === 0) {
+      if (uniqueDevices.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
       }
     } catch (err) {
@@ -243,11 +249,17 @@ const DevicesPage: React.FC = () => {
       console.log('刷新所有设备...');
       const result = await invoke<DeviceInfo[]>('refresh_all_devices');
       console.log('刷新结果:', result);
-      setDevices(result);
+      
+      // 确保设备列表去重，基于设备ID
+      const uniqueDevices = result.filter((device, index, self) => 
+        index === self.findIndex(d => d.id === device.id)
+      );
+      console.log('去重后设备:', uniqueDevices);
+      setDevices(uniqueDevices);
 
       // 获取每个设备的详细状态
       const statusMap = new Map<string, DeviceStatus>();
-      for (const device of result) {
+      for (const device of uniqueDevices) {
         try {
           const status = await invoke<DeviceStatus>('get_device_status', { deviceId: device.id });
           if (status) {
@@ -262,7 +274,7 @@ const DevicesPage: React.FC = () => {
       // 重要：更新已连接端口列表，保持连接状态
       await updateConnectedPorts();
 
-      if (result.length === 0) {
+      if (uniqueDevices.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
       }
     } catch (err) {
