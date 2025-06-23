@@ -1,0 +1,385 @@
+/* 黑夜模式强制覆盖样式 */
+
+/* 修复所有可能的白色背景 */
+.dark *:not(.ant-switch):not(.ant-switch-handle):not(.ant-btn-primary) {
+  background-color: inherit !important;
+}
+
+/* 白天模式菜单文字修复 */
+:not(.dark) .ant-menu-light .ant-menu-item {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+
+:not(.dark) .ant-menu-light .ant-menu-item-icon {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+
+:not(.dark) .ant-menu-light .ant-menu-item:hover {
+  color: #1890ff !important;
+  background-color: #f0f5ff !important;
+}
+
+:not(.dark) .ant-menu-light .ant-menu-item:hover .ant-menu-item-icon {
+  color: #1890ff !important;
+}
+
+:not(.dark) .ant-menu-light .ant-menu-item-selected {
+  color: #1890ff !important;
+  background-color: #e6f7ff !important;
+}
+
+:not(.dark) .ant-menu-light .ant-menu-item-selected .ant-menu-item-icon {
+  color: #1890ff !important;
+}
+
+:not(.dark) .ant-menu-title-content {
+  color: inherit !important;
+}
+
+/* 确保白天模式下的侧边栏背景 */
+:not(.dark) .ant-layout-sider {
+  background: #fff !important;
+}
+
+:not(.dark) .ant-menu {
+  background: #fff !important;
+}
+
+/* 修复白天模式下的折叠按钮 */
+:not(.dark) .ant-layout-sider-trigger {
+  background: #fff !important;
+  color: rgba(0, 0, 0, 0.88) !important;
+  border-top: 1px solid #f0f0f0 !important;
+}
+
+:not(.dark) .ant-layout-sider-trigger:hover {
+  background: #fafafa !important;
+}
+
+/* 特定容器背景色 */
+.dark .dark-page-container > div {
+  background-color: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复所有内联样式的白色背景 */
+.dark [style*="background"]:not([style*="transparent"]):not(.ant-switch):not(.ant-btn) {
+  background-color: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复 Ant Design 组件 */
+.dark .ant-card,
+.dark .ant-card .ant-card-body,
+.dark .ant-card .ant-card-head {
+  background: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-table-wrapper,
+.dark .ant-table,
+.dark .ant-table table,
+.dark .ant-table-thead > tr > th,
+.dark .ant-table-tbody > tr > td,
+.dark .ant-table-container {
+  background: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-empty-description {
+  color: #b8b8b8 !important;
+}
+
+.dark .ant-form-item-label > label {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-input,
+.dark .ant-input-number,
+.dark .ant-input-affix-wrapper,
+.dark .ant-input-password,
+.dark .ant-picker,
+.dark .ant-select-selector,
+.dark textarea {
+  background-color: #262626 !important;
+  border-color: #434343 !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-input::placeholder,
+.dark textarea::placeholder {
+  color: #8c8c8c !important;
+}
+
+.dark .ant-input:focus,
+.dark .ant-input-focused,
+.dark .ant-input-affix-wrapper:focus,
+.dark .ant-input-affix-wrapper-focused {
+  background-color: #262626 !important;
+  border-color: #177ddc !important;
+}
+
+/* 修复下拉菜单 */
+.dark .ant-select-dropdown,
+.dark .ant-dropdown,
+.dark .ant-dropdown-menu,
+.dark .ant-picker-panel-container {
+  background: #1f1f1f !important;
+}
+
+.dark .ant-select-item,
+.dark .ant-dropdown-menu-item {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-select-item-option-active,
+.dark .ant-dropdown-menu-item:hover {
+  background: #262626 !important;
+}
+
+/* 修复模态框 */
+.dark .ant-modal-content,
+.dark .ant-modal-header,
+.dark .ant-modal-body,
+.dark .ant-modal-footer {
+  background: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-modal-title {
+  color: #e8e8e8 !important;
+}
+
+/* 修复消息和通知 */
+.dark .ant-message-notice-content,
+.dark .ant-notification-notice {
+  background: #262626 !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复工具提示 */
+.dark .ant-tooltip-inner {
+  background: #434343 !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复标签页 */
+.dark .ant-tabs-tab {
+  color: #8c8c8c !important;
+}
+
+.dark .ant-tabs-tab-active {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-tabs-nav::before {
+  border-color: #434343 !important;
+}
+
+.dark .ant-tabs-ink-bar {
+  background: #1890ff !important;
+}
+
+/* 修复列表 */
+.dark .ant-list-item {
+  border-color: #434343 !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复分割线 */
+.dark .ant-divider {
+  border-color: #434343 !important;
+}
+
+/* 修复步骤条 */
+.dark .ant-steps-item-process .ant-steps-item-icon {
+  background: #1890ff !important;
+  border-color: #1890ff !important;
+}
+
+.dark .ant-steps-item-title {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-steps-item-description {
+  color: #8c8c8c !important;
+}
+
+/* 修复进度条 */
+.dark .ant-progress-text {
+  color: #e8e8e8 !important;
+}
+
+/* 修复徽章 */
+.dark .ant-badge-count {
+  background: #ff4d4f !important;
+  color: #fff !important;
+}
+
+/* 修复开关 */
+.dark .ant-switch {
+  background: #434343 !important;
+}
+
+.dark .ant-switch-checked {
+  background: #1890ff !important;
+}
+
+/* 修复按钮 */
+.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-danger):not(.ant-btn-link) {
+  background: #262626 !important;
+  border-color: #434343 !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-danger):not(.ant-btn-link):hover {
+  background: #2f2f2f !important;
+  border-color: #177ddc !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复代码块和预格式文本 */
+.dark pre,
+.dark code {
+  background: #262626 !important;
+  color: #e8e8e8 !important;
+  border: 1px solid #434343 !important;
+}
+
+/* 修复折叠面板 */
+.dark .ant-collapse {
+  background: transparent !important;
+  border-color: #434343 !important;
+}
+
+.dark .ant-collapse-item {
+  border-color: #434343 !important;
+}
+
+.dark .ant-collapse-header {
+  background: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-collapse-content {
+  background: #262626 !important;
+  color: #e8e8e8 !important;
+  border-color: #434343 !important;
+}
+
+/* 修复时间线 */
+.dark .ant-timeline-item-content {
+  color: #e8e8e8 !important;
+}
+
+/* 修复描述列表 */
+.dark .ant-descriptions-item-label {
+  background: #262626 !important;
+  color: #b8b8b8 !important;
+}
+
+.dark .ant-descriptions-item-content {
+  background: #1f1f1f !important;
+  color: #e8e8e8 !important;
+}
+
+/* 修复结果页 */
+.dark .ant-result-title {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-result-subtitle {
+  color: #b8b8b8 !important;
+}
+
+/* 修复抽屉 */
+.dark .ant-drawer-content {
+  background: #1f1f1f !important;
+}
+
+.dark .ant-drawer-header {
+  background: #1f1f1f !important;
+  border-color: #434343 !important;
+}
+
+.dark .ant-drawer-title {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-drawer-body {
+  color: #e8e8e8 !important;
+}
+
+/* 修复警告框 */
+.dark .ant-alert {
+  background: #262626 !important;
+  border: 1px solid #434343 !important;
+}
+
+.dark .ant-alert-message {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-alert-description {
+  color: #b8b8b8 !important;
+}
+
+/* 强制修复所有文本颜色 */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+.dark p, .dark span, .dark div, .dark li, .dark a,
+.dark label, .dark td, .dark th {
+  color: #e8e8e8 !important;
+}
+
+/* 修复链接颜色 */
+.dark a {
+  color: #177ddc !important;
+}
+
+.dark a:hover {
+  color: #1890ff !important;
+}
+
+/* 修复 Blockly 工作区 */
+.dark .blockly-workspace {
+  background: #262626 !important;
+}
+
+/* 确保所有子元素继承颜色 */
+.dark * {
+  border-color: #434343;
+}
+
+/* 修复特定的设备卡片样式 */
+.dark .device-item {
+  background: #1f1f1f !important;
+  border: 1px solid #434343 !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .device-item:hover {
+  border-color: #177ddc !important;
+}
+
+.dark .device-item.connected {
+  background: #162312 !important;
+  border-color: #49aa19 !important;
+}
+
+/* 修复聊天消息样式 */
+.dark .chat-messages {
+  background: #1f1f1f !important;
+  border-color: #434343 !important;
+}
+
+.dark .chat-message {
+  color: #e8e8e8 !important;
+}
+
+.dark .chat-message.user {
+  background: #111b26 !important;
+}
+
+.dark .chat-message.assistant {
+  background: #262626 !important;
+}

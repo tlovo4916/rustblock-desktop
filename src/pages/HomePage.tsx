@@ -1,15 +1,16 @@
 import React from 'react';
+import PageContainer from '../components/PageContainer';
 
 const HomePage: React.FC = () => {
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <h1>欢迎使用 RustBlock Desktop</h1>
       <div
         style={{
-          background: 'white',
           padding: 24,
           borderRadius: 8,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          backgroundColor: 'var(--bg-secondary, #f5f5f5)',
+          border: '1px solid var(--border-color, #d9d9d9)',
         }}
       >
         <h2>🎯 面向10岁以下小朋友的可视化编程环境</h2>
@@ -35,7 +36,7 @@ const HomePage: React.FC = () => {
           </ol>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

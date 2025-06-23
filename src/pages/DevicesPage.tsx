@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Modal, Tabs } from 'antd';
 import { logger } from '../utils/logger';
+import PageContainer from '../components/PageContainer';
 // import SerialMonitor from '../components/SerialMonitor';
 // import DeviceConfiguration from '../components/DeviceConfiguration';
 
@@ -385,11 +386,10 @@ const DevicesPage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <h1>设备管理</h1>
       <div
         style={{
-          background: 'white',
           padding: 24,
           borderRadius: 8,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -476,7 +476,7 @@ const DevicesPage: React.FC = () => {
                       border: `2px solid ${device.device_type === 'Unknown' ? '#8c8c8c' : isReady ? '#52c41a' : driverInstalled ? '#faad14' : '#ff4d4f'}`,
                       borderRadius: 12,
                       padding: 20,
-                      background: isConnected ? '#f6ffed' : 'white',
+                      background: isConnected ? '#f6ffed' : 'transparent',
                     }}
                   >
                     {/* 设备基本信息 */}
@@ -845,7 +845,7 @@ const DevicesPage: React.FC = () => {
         >
           <div
             style={{
-              background: 'white',
+              background: 'var(--dialog-bg, white)',
               padding: 24,
               borderRadius: 8,
               maxWidth: 500,
@@ -923,7 +923,7 @@ const DevicesPage: React.FC = () => {
       >
         <div>设备配置功能暂时关闭</div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

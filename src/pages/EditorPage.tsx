@@ -5,6 +5,7 @@ import BlocklyWorkspace from '../components/BlocklyWorkspace';
 // import UploadProgress from '../components/UploadProgress';
 import { safeInvoke } from '../components/MockBackend';
 import { logger } from '../utils/logger';
+import PageContainer from '../components/PageContainer';
 
 const { Option } = Select;
 
@@ -128,7 +129,7 @@ const EditorPage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <Card
         title="可视化编程环境"
         extra={
@@ -188,7 +189,7 @@ const EditorPage: React.FC = () => {
           <div>上传功能暂时关闭</div>
         </Modal>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

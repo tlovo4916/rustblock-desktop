@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { safeInvoke } from '../utils/tauri';
+import PageContainer from '../components/PageContainer';
 
 const DebugPage: React.FC = () => {
   const [result, setResult] = useState<string>('');
@@ -64,11 +65,10 @@ const DebugPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <h1>Tauri 环境调试</h1>
       <div
         style={{
-          background: 'white',
           padding: 24,
           borderRadius: 8,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -98,7 +98,7 @@ const DebugPage: React.FC = () => {
           {result || '点击按钮进行测试'}
         </pre>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

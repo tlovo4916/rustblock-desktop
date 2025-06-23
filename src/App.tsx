@@ -10,7 +10,11 @@ import {
   TeamOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
+import ThemeToggle from "./components/ThemeToggle";
+import DarkModeStyles from "./components/DarkModeStyles";
+import { useTheme } from "./contexts/ThemeContext";
 import "./styles.css";
+import "./styles/dark-override.css";
 
 // 懒加载页面组件以提升性能
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -20,7 +24,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DevicesPage = lazy(() => import("./pages/DevicesPage"));
 const AIPage = lazy(() => import("./pages/AIPage"));
 
-const { Content, Sider } = Layout;
+const { Content, Sider, Header } = Layout;
 
 // 加载组件
 const PageLoader = () => (
@@ -37,6 +41,7 @@ const PageLoader = () => (
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [currentPage, setCurrentPage] = useState("home");
+  const { isDarkMode } = useTheme();
 
   const menuItems = [
     { key: "home", icon: <HomeOutlined />, label: "首页" },
@@ -76,6 +81,7 @@ const App: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <DarkModeStyles />
       <Sider
         collapsible
         collapsed={collapsed}
@@ -88,18 +94,27 @@ const App: React.FC = () => {
           left: 0,
           top: 0,
           bottom: 0,
+          background: isDarkMode ? '#1f1f1f' : '#fff',
+          borderRight: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
         }}
       >
         <div
           style={{
             height: 32,
             margin: 16,
-            background: "rgba(0, 0, 0, 0.2)",
+            background: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#1890ff",
             borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 'bold',
           }}
-        />
+        >
+          {collapsed ? 'R' : 'RustBlock'}
+        </div>
         <Menu
-          theme="light"
           defaultSelectedKeys={["home"]}
           selectedKeys={[currentPage]}
           mode="inline"
@@ -108,16 +123,20 @@ const App: React.FC = () => {
         />
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200 }}>
+        <Header
+          style={{
+            padding: '0 24px',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            height: 64,
+          }}
+        >
+          <ThemeToggle />
+        </Header>
         <Content style={{ margin: "0", overflow: "initial" }}>
-          <div
-            style={{
-              padding: 24,
-              background: "#fff",
-              minHeight: "100vh",
-            }}
-          >
-            {renderContent()}
-          </div>
+          {renderContent()}
         </Content>
       </Layout>
     </Layout>

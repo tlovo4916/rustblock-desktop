@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { safeInvoke } from '../utils/tauri';
 import { logger } from '../utils/logger';
+import PageContainer from '../components/PageContainer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -155,7 +156,7 @@ const AIPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -165,7 +166,6 @@ const AIPage: React.FC = () => {
       <h1>AI 编程助手</h1>
       <div
         style={{
-          background: 'white',
           padding: 24,
           borderRadius: 8,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -373,7 +373,7 @@ const AIPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -29,14 +29,13 @@ import {
   Trophy,
 } from 'lucide-react';
 import styled from 'styled-components';
+import PageContainer from '../components/PageContainer';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { TextArea } = Input;
 
-const PageContainer = styled.div`
-  padding: 24px;
-  min-height: 100vh;
+const StyledPageContainer = styled(PageContainer)`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 `;
 
@@ -365,7 +364,7 @@ const EnhancedAIPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer>
+    <StyledPageContainer>
       <ContentCard
         title={
           <Space>
@@ -744,7 +743,7 @@ const EnhancedAIPage: React.FC = () => {
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </StyledPageContainer>
   );
 };
 

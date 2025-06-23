@@ -5,6 +5,7 @@ import { safeInvoke } from '../utils/tauri';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
 import { logger } from '../utils/logger';
+import PageContainer from '../components/PageContainer';
 
 const { TabPane } = Tabs;
 
@@ -80,7 +81,7 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer>
       <h1>应用设置</h1>
       <Card style={{ minHeight: 'calc(100vh - 150px)' }}>
         <Tabs defaultActiveKey="general">
@@ -293,7 +294,7 @@ const SettingsPage: React.FC = () => {
       >
         <ToolStatus />
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 
