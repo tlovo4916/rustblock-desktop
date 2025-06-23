@@ -95,6 +95,28 @@ const DarkModeStyles: React.FC = () => {
         .dark [style*="box-shadow"] {
           box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1) !important;
         }
+        
+        /* 强制修复黑夜模式菜单 */
+        .dark .ant-menu-item,
+        .dark .ant-menu-item span,
+        .dark .ant-menu-item-icon,
+        .dark .ant-menu-title-content {
+          color: #e8e8e8 !important;
+        }
+        
+        .dark .ant-menu-item:hover,
+        .dark .ant-menu-item:hover span,
+        .dark .ant-menu-item:hover .ant-menu-item-icon,
+        .dark .ant-menu-item:hover .ant-menu-title-content {
+          color: #ffffff !important;
+        }
+        
+        .dark .ant-menu-item-selected,
+        .dark .ant-menu-item-selected span,
+        .dark .ant-menu-item-selected .ant-menu-item-icon,
+        .dark .ant-menu-item-selected .ant-menu-title-content {
+          color: #1890ff !important;
+        }
       `;
 
       return () => {

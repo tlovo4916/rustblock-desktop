@@ -5,6 +5,68 @@
   background-color: inherit !important;
 }
 
+/* 黑夜模式菜单文字修复 */
+.dark .ant-menu-light .ant-menu-item,
+.dark .ant-menu-dark .ant-menu-item,
+.dark .ant-menu .ant-menu-item {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-light .ant-menu-item-icon,
+.dark .ant-menu-dark .ant-menu-item-icon,
+.dark .ant-menu .ant-menu-item-icon {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-light .ant-menu-title-content,
+.dark .ant-menu-dark .ant-menu-title-content,
+.dark .ant-menu .ant-menu-title-content {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-light .ant-menu-item:hover,
+.dark .ant-menu-dark .ant-menu-item:hover,
+.dark .ant-menu .ant-menu-item:hover {
+  color: #ffffff !important;
+  background-color: #262626 !important;
+}
+
+.dark .ant-menu-light .ant-menu-item:hover .ant-menu-item-icon,
+.dark .ant-menu-dark .ant-menu-item:hover .ant-menu-item-icon,
+.dark .ant-menu .ant-menu-item:hover .ant-menu-item-icon,
+.dark .ant-menu-light .ant-menu-item:hover .ant-menu-title-content,
+.dark .ant-menu-dark .ant-menu-item:hover .ant-menu-title-content,
+.dark .ant-menu .ant-menu-item:hover .ant-menu-title-content {
+  color: #ffffff !important;
+}
+
+.dark .ant-menu-light .ant-menu-item-selected,
+.dark .ant-menu-dark .ant-menu-item-selected,
+.dark .ant-menu .ant-menu-item-selected {
+  color: #1890ff !important;
+  background-color: #262626 !important;
+}
+
+.dark .ant-menu-light .ant-menu-item-selected .ant-menu-item-icon,
+.dark .ant-menu-dark .ant-menu-item-selected .ant-menu-item-icon,
+.dark .ant-menu .ant-menu-item-selected .ant-menu-item-icon,
+.dark .ant-menu-light .ant-menu-item-selected .ant-menu-title-content,
+.dark .ant-menu-dark .ant-menu-item-selected .ant-menu-title-content,
+.dark .ant-menu .ant-menu-item-selected .ant-menu-title-content {
+  color: #1890ff !important;
+}
+
+/* 修复侧边栏折叠按钮 */
+.dark .ant-layout-sider-trigger {
+  background: #262626 !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-layout-sider-trigger:hover {
+  background: #2f2f2f !important;
+  color: #ffffff !important;
+}
+
 /* 白天模式菜单文字修复 */
 :not(.dark) .ant-menu-light .ant-menu-item {
   color: rgba(0, 0, 0, 0.88) !important;

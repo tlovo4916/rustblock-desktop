@@ -126,6 +126,7 @@ body {
   background: #141414 !important;
 }
 
+/* 黑夜模式菜单样式 */
 .dark .ant-menu {
   background: #1f1f1f !important;
   color: #e8e8e8 !important;
@@ -135,13 +136,32 @@ body {
   color: #e8e8e8 !important;
 }
 
+.dark .ant-menu-item .ant-menu-item-icon {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-item .ant-menu-title-content {
+  color: #e8e8e8 !important;
+}
+
 .dark .ant-menu-item:hover {
   background-color: #262626 !important;
+  color: #ffffff !important;
+}
+
+.dark .ant-menu-item:hover .ant-menu-item-icon,
+.dark .ant-menu-item:hover .ant-menu-title-content {
+  color: #ffffff !important;
 }
 
 .dark .ant-menu-item-selected {
   background-color: #262626 !important;
-  color: #e8e8e8 !important;
+  color: #1890ff !important;
+}
+
+.dark .ant-menu-item-selected .ant-menu-item-icon,
+.dark .ant-menu-item-selected .ant-menu-title-content {
+  color: #1890ff !important;
 }
 
 .dark .ant-menu-item-selected::after {

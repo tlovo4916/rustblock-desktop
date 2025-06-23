@@ -157,34 +157,6 @@ const SettingsPage: React.FC = () => {
                 <h3>🔧 编程环境</h3>
                 <div style={{ display: 'grid', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8 }}>界面主题:</label>
-                    <select
-                      style={{
-                        padding: 8,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        width: 200,
-                      }}
-                    >
-                      <option value="light">浅色主题</option>
-                      <option value="dark">深色主题</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 8 }}>界面语言:</label>
-                    <select
-                      style={{
-                        padding: 8,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                        width: 200,
-                      }}
-                    >
-                      <option value="zh-CN">简体中文</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                  <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <input type="checkbox" defaultChecked />
                       自动保存项目 (每30秒)
