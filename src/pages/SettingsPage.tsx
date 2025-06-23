@@ -4,6 +4,7 @@ import { Settings, Wrench } from 'lucide-react';
 import { safeInvoke } from '../utils/tauri';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
+import { logger } from '../utils/logger';
 
 const { TabPane } = Tabs;
 
@@ -44,7 +45,7 @@ const SettingsPage: React.FC = () => {
 
       message.success('AI配置保存成功！现在可以使用AI助手了');
     } catch (error) {
-      console.error('保存配置失败:', error);
+      logger.error('保存配置失败:', error);
       message.error('保存配置失败');
     } finally {
       setLoading(false);
@@ -71,7 +72,7 @@ const SettingsPage: React.FC = () => {
         message.error('API连接测试失败，请检查密钥和网络连接');
       }
     } catch (error) {
-      console.error('测试连接失败:', error);
+      logger.error('测试连接失败:', error);
       message.error(`测试失败: ${error}`);
     } finally {
       setTesting(false);

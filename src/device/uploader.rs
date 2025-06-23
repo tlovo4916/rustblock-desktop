@@ -1,12 +1,10 @@
 use super::{DeviceType, UploadOptions};
 use anyhow::{Result, anyhow};
-use log::{info, error, debug, warn};
-use std::process::Command;
+use log::{info, warn};
 use std::path::PathBuf;
 use tokio::process::Command as AsyncCommand;
 use std::path::Path;
 use std::fs;
-use std::io::Write;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
@@ -167,7 +165,7 @@ impl DeviceUploader {
             .args(&[
                 "compile",
                 "--fqbn", &board_config.fqbn,
-                sketch_file.parent().unwrap().to_str().unwrap(),
+                sketch_file.parent().ok_or_else(|| anyhow!("无法获取父目录"))?.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?,
             ])
             .output()
             .await?;
@@ -185,7 +183,7 @@ impl DeviceUploader {
                 "upload",
                 "--fqbn", &board_config.fqbn,
                 "--port", port,
-                sketch_file.parent().unwrap().to_str().unwrap(),
+                sketch_file.parent().ok_or_else(|| anyhow!("无法获取父目录"))?.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?,
             ])
             .output()
             .await?;
@@ -203,7 +201,7 @@ impl DeviceUploader {
         info!("使用PlatformIO上传代码...");
         
         // 创建platformio.ini文件
-        let project_dir = sketch_file.parent().unwrap();
+        let project_dir = sketch_file.parent().ok_or_else(|| anyhow!("无法获取父目录"))?;
         let platformio_ini = project_dir.join("platformio.ini");
         
         let ini_content = self.generate_platformio_ini(board_config, port);
@@ -237,9 +235,9 @@ impl DeviceUploader {
         let output = AsyncCommand::new("mpremote")
             .args(&[
                 "mount", 
-                python_file.parent().unwrap().to_str().unwrap(),
+                python_file.parent().ok_or_else(|| anyhow!("无法获取父目录"))?.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?,
                 "exec",
-                &format!("exec(open('{}').read())", python_file.file_name().unwrap().to_str().unwrap()),
+                &format!("exec(open('{}').read())", python_file.file_name().ok_or_else(|| anyhow!("无法获取文件名"))?.to_str().ok_or_else(|| anyhow!("无法转换文件名为字符串"))?),
             ])
             .output()
             .await?;
@@ -260,7 +258,7 @@ impl DeviceUploader {
             .args(&[
                 "--port", port,
                 "put", 
-                python_file.to_str().unwrap(),
+                python_file.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?,
                 "main.py"
             ])
             .output()
@@ -281,14 +279,14 @@ impl DeviceUploader {
         let rshell_script = format!(
             "connect serial {}\ncp {} /pyboard/main.py\nrepl ~\n",
             port,
-            python_file.to_str().unwrap()
+            python_file.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?
         );
         
         let temp_script = std::env::temp_dir().join("rshell_upload.txt");
         fs::write(&temp_script, rshell_script)?;
         
         let output = AsyncCommand::new("rshell")
-            .args(&["--file", temp_script.to_str().unwrap()])
+            .args(&["--file", temp_script.to_str().ok_or_else(|| anyhow!("无法转换路径为字符串"))?])
             .output()
             .await?;
 

@@ -68,7 +68,7 @@ where
     }
 
     pub fn get(&self, key: &K) -> Option<V> {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("获取缓存写锁失败");
         
         if let Some(item) = cache.get_mut(key) {
             if item.is_expired(self.ttl) {
@@ -84,7 +84,7 @@ where
     }
 
     pub fn put(&self, key: K, value: V) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("获取缓存写锁失败");
         
         // 如果超过最大容量，移除最少使用的项
         if cache.len() >= self.max_size {
@@ -95,23 +95,23 @@ where
     }
 
     pub fn remove(&self, key: &K) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("获取缓存写锁失败");
         cache.remove(key);
     }
 
     pub fn clear(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("获取缓存写锁失败");
         cache.clear();
         info!("缓存已清空");
     }
 
     pub fn size(&self) -> usize {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("获取缓存读锁失败");
         cache.len()
     }
 
     pub fn cleanup_expired(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("获取缓存写锁失败");
         let before_size = cache.len();
         
         cache.retain(|_, item| {
@@ -191,25 +191,25 @@ impl PerformanceMonitor {
 
     pub fn record_request(&self, response_time: Duration, is_error: bool) {
         {
-            let mut count = self.request_count.write().unwrap();
+            let mut count = self.request_count.write().expect("获取请求计数器写锁失败");
             *count += 1;
         }
         
         {
-            let mut total_time = self.total_response_time.write().unwrap();
+            let mut total_time = self.total_response_time.write().expect("获取响应时间累计器写锁失败");
             *total_time += response_time;
         }
         
         if is_error {
-            let mut error_count = self.error_count.write().unwrap();
+            let mut error_count = self.error_count.write().expect("获取错误计数器写锁失败");
             *error_count += 1;
         }
     }
 
     pub fn collect_metrics(&self, active_tasks: usize, cache_hit_rate: f64) -> PerformanceMetrics {
-        let request_count = *self.request_count.read().unwrap();
-        let error_count = *self.error_count.read().unwrap();
-        let total_response_time = *self.total_response_time.read().unwrap();
+        let request_count = *self.request_count.read().expect("获取请求计数器读锁失败");
+        let error_count = *self.error_count.read().expect("获取错误计数器读锁失败");
+        let total_response_time = *self.total_response_time.read().expect("获取响应时间累计器读锁失败");
         
         let error_rate = if request_count > 0 {
             error_count as f64 / request_count as f64
@@ -235,7 +235,7 @@ impl PerformanceMonitor {
         
         // 添加到历史记录
         {
-            let mut history = self.metrics_history.write().unwrap();
+            let mut history = self.metrics_history.write().expect("获取性能指标历史写锁失败");
             history.push(metrics.clone());
             
             // 保持历史记录大小限制
@@ -248,23 +248,23 @@ impl PerformanceMonitor {
     }
 
     pub fn get_metrics_history(&self) -> Vec<PerformanceMetrics> {
-        let history = self.metrics_history.read().unwrap();
+        let history = self.metrics_history.read().expect("获取性能指标历史读锁失败");
         history.clone()
     }
 
     pub fn reset_counters(&self) {
         {
-            let mut count = self.request_count.write().unwrap();
+            let mut count = self.request_count.write().expect("获取请求计数器写锁失败");
             *count = 0;
         }
         
         {
-            let mut count = self.error_count.write().unwrap();
+            let mut count = self.error_count.write().expect("获取错误计数器写锁失败");
             *count = 0;
         }
         
         {
-            let mut time = self.total_response_time.write().unwrap();
+            let mut time = self.total_response_time.write().expect("获取响应时间累计器写锁失败");
             *time = Duration::ZERO;
         }
     }

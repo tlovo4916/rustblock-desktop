@@ -3,6 +3,7 @@ import { Button, Card, Select, message, Tooltip, Alert, List, Modal, Tag } from 
 import { Play, Download, Save, Upload, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 import styled from 'styled-components';
 import { validateCode, ValidationResult, getValidationSummary } from '../utils/codeValidator';
+import { logger } from '../utils/logger';
 
 const { Option } = Select;
 
@@ -124,7 +125,7 @@ while True:
       setValidationResult(result);
 
       if (!result.valid) {
-        console.warn('代码验证失败:', result.errors);
+        logger.warn('代码验证失败:', result.errors);
       }
     },
     [selectedLanguage]
@@ -179,7 +180,7 @@ while True:
 
           message.success('项目已加载');
         } catch (error) {
-          console.error('加载项目失败:', error);
+          logger.error('加载项目失败:', error);
           message.error('项目文件格式错误');
         }
       };
@@ -266,9 +267,9 @@ while True:
         // 动态导入 Blockly 以避免初始加载问题
         await import('blockly');
         setBlocklyLoaded(true);
-        console.log('Blockly已加载');
+        logger.info('Blockly已加载');
       } catch (error) {
-        console.warn('Blockly加载失败，将使用代码编辑模式:', error);
+        logger.warn('Blockly加载失败，将使用代码编辑模式:', error);
         setBlocklyLoaded(false);
       }
     };

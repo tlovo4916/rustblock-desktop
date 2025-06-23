@@ -1,106 +1,126 @@
-import { useState, useEffect } from 'react';
-import HomePage from './pages/HomePage';
-import EditorPage from './pages/EditorPage';
-import DevicesPage from './pages/DevicesPage';
-import AIPage from './pages/AIPage';
-import EnhancedAIPage from './pages/EnhancedAIPage';
-import SettingsPage from './pages/SettingsPage';
-import DebugPage from './pages/DebugPage';
+import React, { useState, lazy, Suspense } from "react";
+import { Layout, Menu, Button, Spin } from "antd";
+import {
+  HomeOutlined,
+  CodeOutlined,
+  ToolOutlined,
+  SettingOutlined,
+  RobotOutlined,
+  BugOutlined,
+  TeamOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
+import "./styles.css";
 
-// 简化的侧边栏组件
-const SidebarWithNavigation: React.FC<{
-  onNavigate: (page: string) => void;
-  currentPage: string;
-}> = ({ onNavigate, currentPage }) => {
+// 懒加载页面组件以提升性能
+const HomePage = lazy(() => import("./pages/HomePage"));
+const EditorPage = lazy(() => import("./pages/EditorPage"));
+const DebugPage = lazy(() => import("./pages/DebugPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const DevicesPage = lazy(() => import("./pages/DevicesPage"));
+const AIPage = lazy(() => import("./pages/AIPage"));
+
+const { Content, Sider } = Layout;
+
+// 加载组件
+const PageLoader = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh' 
+  }}>
+    <Spin size="large" tip="加载中..." />
+  </div>
+);
+
+const App: React.FC = () => {
+  const [collapsed, setCollapsed] = useState(false);
+  const [currentPage, setCurrentPage] = useState("home");
+
   const menuItems = [
-    { key: 'home', label: '🏠 首页' },
-    { key: 'editor', label: '🔧 编程环境' },
-    { key: 'devices', label: '📱 设备管理' },
-    { key: 'ai', label: '🤖 AI助手' },
-    { key: 'enhanced-ai', label: '🧠 智能助手' },
-    { key: 'settings', label: '⚙️ 设置' },
-    { key: 'debug', label: '🐛 调试' },
+    { key: "home", icon: <HomeOutlined />, label: "首页" },
+    { key: "editor", icon: <CodeOutlined />, label: "代码编辑器" },
+    { key: "debug", icon: <BugOutlined />, label: "调试工具" },
+    { key: "devices", icon: <TeamOutlined />, label: "设备管理" },
+    { key: "ai", icon: <RobotOutlined />, label: "AI 助手" },
+    { key: "tools", icon: <ToolOutlined />, label: "工具箱" },
+    { key: "docs", icon: <FileTextOutlined />, label: "文档" },
+    { key: "settings", icon: <SettingOutlined />, label: "设置" },
   ];
 
-  return (
-    <div
-      style={{
-        width: 200,
-        background: '#001529',
-        color: 'white',
-        padding: 16,
-        minHeight: '100vh',
-      }}
-    >
-      <h3 style={{ color: 'white', marginBottom: 24 }}>RustBlock</h3>
-      <div>
-        {menuItems.map(item => (
-          <div
-            key={item.key}
-            style={{
-              padding: 8,
-              cursor: 'pointer',
-              borderRadius: 4,
-              marginBottom: 4,
-              background: currentPage === item.key ? '#1890ff' : 'transparent',
-            }}
-            onClick={() => onNavigate(item.key)}
-          >
-            {item.label}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-interface AppProps {}
-
-const App: React.FC<AppProps> = () => {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // 简化的初始化
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
+  const renderContent = () => {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <h2>正在启动 RustBlock Desktop...</h2>
-        </div>
-      </div>
+      <Suspense fallback={<PageLoader />}>
+        {(() => {
+          switch (currentPage) {
+            case "home":
+              return <HomePage />;
+            case "editor":
+              return <EditorPage />;
+            case "debug":
+              return <DebugPage />;
+            case "devices":
+              return <DevicesPage />;
+            case "ai":
+              return <AIPage />;
+            case "settings":
+              return <SettingsPage />;
+            default:
+              return <HomePage />;
+          }
+        })()}
+      </Suspense>
     );
-  }
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'editor':
-        return <EditorPage />;
-      case 'devices':
-        return <DevicesPage />;
-      case 'ai':
-        return <AIPage />;
-      case 'enhanced-ai':
-        return <EnhancedAIPage />;
-      case 'settings':
-        return <SettingsPage />;
-      case 'debug':
-        return <DebugPage />;
-      default:
-        return <HomePage />;
-    }
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <SidebarWithNavigation onNavigate={setCurrentPage} currentPage={currentPage} />
-      <div style={{ flex: 1, background: '#f0f2f5' }}>{renderPage()}</div>
-    </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        theme="light"
+        style={{
+          overflow: "auto",
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
+        <div
+          style={{
+            height: 32,
+            margin: 16,
+            background: "rgba(0, 0, 0, 0.2)",
+            borderRadius: 8,
+          }}
+        />
+        <Menu
+          theme="light"
+          defaultSelectedKeys={["home"]}
+          selectedKeys={[currentPage]}
+          mode="inline"
+          items={menuItems}
+          onClick={({ key }) => setCurrentPage(key)}
+        />
+      </Sider>
+      <Layout style={{ marginLeft: collapsed ? 80 : 200 }}>
+        <Content style={{ margin: "0", overflow: "initial" }}>
+          <div
+            style={{
+              padding: 24,
+              background: "#fff",
+              minHeight: "100vh",
+            }}
+          >
+            {renderContent()}
+          </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 

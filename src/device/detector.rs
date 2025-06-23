@@ -1,6 +1,6 @@
 use super::{DeviceInfo, DeviceType, driver::DriverManager, connection_manager::ConnectionManager};
 use anyhow::{Result, anyhow};
-use serialport::{SerialPortInfo, SerialPortType};
+use serialport::SerialPortType;
 use std::collections::{HashMap, HashSet};
 use log::{debug, info, warn};
 use std::sync::Arc;

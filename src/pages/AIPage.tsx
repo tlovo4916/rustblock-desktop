@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { safeInvoke } from '../utils/tauri';
+import { logger } from '../utils/logger';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -138,7 +139,7 @@ const AIPage: React.FC = () => {
         setTypingContent('');
       });
     } catch (error) {
-      console.error('发送消息失败:', error);
+      logger.error('发送消息失败:', error);
       message.error(`发送失败: ${error}`);
       setLoading(false);
       setLoadingStatus('');

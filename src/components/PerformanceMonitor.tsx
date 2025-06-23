@@ -27,6 +27,7 @@ import {
   Clock,
 } from 'lucide-react';
 import styled from 'styled-components';
+import { logger } from '../utils/logger';
 
 const { Option } = Select;
 
@@ -137,7 +138,7 @@ const PerformanceMonitor: React.FC = () => {
       const status = await safeInvoke('get_system_status');
       setSystemStatus(status);
     } catch (error) {
-      console.warn('获取系统状态失败，使用模拟数据:', error);
+      logger.warn('获取系统状态失败，使用模拟数据:', error);
       setSystemStatus(getMockSystemStatus());
     }
   }, []);
@@ -148,7 +149,7 @@ const PerformanceMonitor: React.FC = () => {
       const history = await safeInvoke('get_performance_history');
       setPerformanceHistory(history);
     } catch (error) {
-      console.warn('获取性能历史失败:', error);
+      logger.warn('获取性能历史失败:', error);
       // 生成模拟历史数据
       const mockHistory = Array.from({ length: 10 }, (_, i) => ({
         cpu_usage: 15 + Math.random() * 10,
@@ -187,7 +188,7 @@ const PerformanceMonitor: React.FC = () => {
     try {
       const result = await safeInvoke('optimize_performance');
       message.success('性能优化完成！');
-      console.log('优化结果:', result);
+      logger.info('优化结果:', result);
 
       // 刷新状态
       setTimeout(() => {
@@ -196,7 +197,7 @@ const PerformanceMonitor: React.FC = () => {
       }, 1000);
     } catch (error) {
       message.warning('性能优化功能暂时不可用，但界面仍可正常使用');
-      console.warn('优化失败:', error);
+      logger.warn('优化失败:', error);
     } finally {
       setOptimizing(false);
     }
@@ -211,7 +212,7 @@ const PerformanceMonitor: React.FC = () => {
       fetchSystemStatus();
     } catch (error) {
       message.warning('清空缓存功能暂时不可用');
-      console.warn('清空缓存失败:', error);
+      logger.warn('清空缓存失败:', error);
     } finally {
       setLoading(false);
     }
@@ -223,10 +224,10 @@ const PerformanceMonitor: React.FC = () => {
     try {
       const results = await safeInvoke('run_performance_benchmark');
       message.success('基准测试完成');
-      console.log('基准测试结果:', results);
+      logger.info('基准测试结果:', results);
     } catch (error) {
       message.warning('基准测试功能暂时不可用');
-      console.warn('基准测试失败:', error);
+      logger.warn('基准测试失败:', error);
     } finally {
       setLoading(false);
     }
@@ -241,7 +242,7 @@ const PerformanceMonitor: React.FC = () => {
       message.success(`成功预加载 ${successCount}/${resources.length} 个资源`);
     } catch (error) {
       message.warning('预加载功能暂时不可用');
-      console.warn('预加载失败:', error);
+      logger.warn('预加载失败:', error);
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Progress, Steps, message } from 'antd';
 import { invoke } from '@tauri-apps/api/core';
+import { logger } from '../utils/logger';
 
 interface UploadProgressProps {
   visible: boolean;
@@ -160,7 +161,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
         throw new Error(verifyResult.error || '验证失败');
       }
     } catch (error: any) {
-      console.error('上传失败:', error);
+      logger.error('上传失败:', error);
       setUploadError(error.message || '未知错误');
 
       // 标记当前步骤为错误
@@ -184,7 +185,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
         content: '正在上传中，确定要取消吗？',
         onOk: () => {
           // 这里应该调用后端API来取消上传
-          invoke('cancel_upload').catch(console.error);
+          invoke('cancel_upload').catch(err => logger.error('取消上传失败:', err));
           onCancel?.();
         },
       });

@@ -1,4 +1,4 @@
-use crate::utils::{get_projects_dir, format_file_size};
+use crate::utils::get_projects_dir;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;

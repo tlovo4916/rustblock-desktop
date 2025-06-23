@@ -1,6 +1,8 @@
 // Mock backend for development when Tauri is not available
+import { logger } from '../utils/logger';
+
 export const mockInvoke = async (command: string, args?: any): Promise<any> => {
-  console.log(`Mock invoke: ${command}`, args);
+  logger.debug(`Mock invoke: ${command}`, args);
 
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
@@ -208,7 +210,7 @@ export const mockInvoke = async (command: string, args?: any): Promise<any> => {
       return args?.data?.length || 0; // 返回发送的字节数
 
     default:
-      console.warn(`未知的命令: ${command}`);
+      logger.warn(`未知的命令: ${command}`);
       return null;
   }
 };
@@ -225,11 +227,11 @@ export const safeInvoke = async (command: string, args?: any): Promise<any> => {
       const { invoke } = await import('@tauri-apps/api/core');
       return await invoke(command, args);
     } catch (error) {
-      console.warn(`Tauri invoke 失败，使用模拟数据: ${command}`, error);
+      logger.warn(`Tauri invoke 失败，使用模拟数据: ${command}`, error);
       return await mockInvoke(command, args);
     }
   } else {
-    console.log('使用模拟后端:', command);
+    logger.debug('使用模拟后端:', command);
     return await mockInvoke(command, args);
   }
 };

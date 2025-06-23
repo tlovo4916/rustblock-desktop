@@ -4,6 +4,7 @@ import { RefreshCw, Play, Settings } from 'lucide-react';
 import BlocklyWorkspace from '../components/BlocklyWorkspace';
 // import UploadProgress from '../components/UploadProgress';
 import { safeInvoke } from '../components/MockBackend';
+import { logger } from '../utils/logger';
 
 const { Option } = Select;
 
@@ -34,7 +35,7 @@ const EditorPage: React.FC = () => {
         setSelectedDevice(result[0]);
       }
     } catch (error) {
-      console.error('扫描设备失败:', error);
+      logger.error('扫描设备失败:', error);
       message.error('扫描设备失败');
     } finally {
       setIsLoading(false);
@@ -95,7 +96,7 @@ const EditorPage: React.FC = () => {
 
       return true;
     } catch (error) {
-      console.error('预上传检查失败:', error);
+      logger.error('预上传检查失败:', error);
       message.error('设备状态检查失败');
       return false;
     }
@@ -119,7 +120,7 @@ const EditorPage: React.FC = () => {
 
   // 代码生成回调
   const handleCodeGenerated = (code: string, language: string) => {
-    console.log(`生成了${language}代码:`, code);
+    logger.debug(`生成了${language}代码:`, code);
   };
 
   useEffect(() => {

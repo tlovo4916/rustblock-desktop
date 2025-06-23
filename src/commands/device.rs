@@ -9,7 +9,6 @@ use anyhow::Result;
 use tokio::sync::Mutex;
 use tauri::{command, State};
 use log::{info, error};
-use std::collections::HashMap;
 
 // 全局设备检测器状态
 pub type DeviceDetectorState = Mutex<DeviceDetector>;

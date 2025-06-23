@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react';
+import { logger } from '../utils/logger';
 
 interface Tool {
   name: string;
@@ -84,7 +85,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
         onToolsReady(allRequiredInstalled);
       }
     } catch (error) {
-      console.error('检查工具状态失败:', error);
+      logger.error('检查工具状态失败:', error);
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ const ToolStatus: React.FC<ToolStatusProps> = ({ onToolsReady }) => {
         alert(`安装失败: ${result.message}`);
       }
     } catch (error) {
-      console.error('安装工具失败:', error);
+      logger.error('安装工具失败:', error);
       alert(`安装失败: ${error}`);
     } finally {
       setInstalling(null);

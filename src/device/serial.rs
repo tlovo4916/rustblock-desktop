@@ -1,8 +1,8 @@
 use anyhow::{Result, anyhow};
-use serialport::{SerialPort, SerialPortBuilder};
+use serialport::SerialPort;
 use std::io::{Read, Write};
 use std::time::Duration;
-use log::{info, error, debug};
+use log::{info, debug};
 
 pub struct SerialConnection {
     port: Box<dyn SerialPort>,

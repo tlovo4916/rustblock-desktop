@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { logger } from '../utils/logger';
 
 interface SerialMonitorProps {
   port: string;
@@ -38,7 +39,7 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
         ]);
       }
     } catch (error) {
-      console.error('读取串口数据失败:', error);
+      logger.error('读取串口数据失败:', error);
     }
   };
 
@@ -61,7 +62,7 @@ const SerialMonitor: React.FC<SerialMonitorProps> = ({ port, baudRate, onClose }
 
       setInput('');
     } catch (error) {
-      console.error('发送数据失败:', error);
+      logger.error('发送数据失败:', error);
     }
   };
 

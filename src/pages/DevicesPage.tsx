@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Modal, Tabs } from 'antd';
+import { logger } from '../utils/logger';
 // import SerialMonitor from '../components/SerialMonitor';
 // import DeviceConfiguration from '../components/DeviceConfiguration';
 
@@ -54,15 +55,15 @@ const DevicesPage: React.FC = () => {
     setError(null);
 
     try {
-      console.log('开始扫描设备...');
+      logger.info('开始扫描设备...');
       const result = await invoke<DeviceInfo[]>('scan_devices');
-      console.log('扫描结果:', result);
+      logger.info('扫描结果:', result);
       
       // 确保设备列表去重，基于设备ID
       const uniqueDevices = result.filter((device, index, self) => 
         index === self.findIndex(d => d.id === device.id)
       );
-      console.log('去重后设备:', uniqueDevices);
+      logger.debug('去重后设备:', uniqueDevices);
       setDevices(uniqueDevices);
 
       // 获取每个设备的详细状态
@@ -74,7 +75,7 @@ const DevicesPage: React.FC = () => {
             statusMap.set(device.id, status);
           }
         } catch (err) {
-          console.warn(`获取设备 ${device.id} 状态失败:`, err);
+          logger.warn(`获取设备 ${device.id} 状态失败:`, err);
         }
       }
       setDeviceStatuses(statusMap);
@@ -86,7 +87,7 @@ const DevicesPage: React.FC = () => {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
       }
     } catch (err) {
-      console.error('扫描设备失败:', err);
+      logger.error('扫描设备失败:', err);
       setError(`扫描设备失败: ${err}`);
     } finally {
       setLoading(false);
@@ -96,7 +97,7 @@ const DevicesPage: React.FC = () => {
   const connectDevice = async (deviceId: string) => {
     try {
       setError(null);
-      console.log('开始连接设备:', deviceId);
+      logger.info('开始连接设备:', deviceId);
 
       // 获取设备信息
       const device = devices.find(d => d.id === deviceId);
@@ -125,7 +126,7 @@ const DevicesPage: React.FC = () => {
         baudRate: baudRate,
       });
 
-      console.log('设备连接成功');
+      logger.info('设备连接成功');
 
       // 更新已连接端口列表
       await updateConnectedPorts();
@@ -136,7 +137,7 @@ const DevicesPage: React.FC = () => {
       // 记录连接历史
       await recordConnectionHistory(deviceId, true);
     } catch (err) {
-      console.error('连接设备失败:', err);
+      logger.error('连接设备失败:', err);
       const errorMsg = getDetailedErrorMessage(err);
       setError(errorMsg);
 
@@ -148,7 +149,7 @@ const DevicesPage: React.FC = () => {
   const disconnectDevice = async (deviceId: string) => {
     try {
       setError(null);
-      console.log('开始断开设备:', deviceId);
+      logger.info('开始断开设备:', deviceId);
 
       // 获取设备信息
       const device = devices.find(d => d.id === deviceId);
@@ -158,14 +159,14 @@ const DevicesPage: React.FC = () => {
 
       // 断开串口连接
       await invoke('disconnect_serial', { port: device.port });
-      console.log('设备断开连接');
+      logger.info('设备断开连接');
 
       // 更新已连接端口列表
       await updateConnectedPorts();
 
       await refreshDeviceStatus(deviceId);
     } catch (err) {
-      console.error('断开设备失败:', err);
+      logger.error('断开设备失败:', err);
       setError(`断开设备失败: ${err}`);
     }
   };
@@ -190,7 +191,7 @@ const DevicesPage: React.FC = () => {
       const ports = await invoke<string[]>('get_connected_ports');
       setConnectedPorts(ports);
     } catch (err) {
-      console.warn('获取已连接端口列表失败:', err);
+      logger.warn('获取已连接端口列表失败:', err);
     }
   };
 
@@ -201,11 +202,11 @@ const DevicesPage: React.FC = () => {
   const installDriver = async (deviceId: string) => {
     try {
       setError(null);
-      console.log('开始安装驱动:', deviceId);
+      logger.info('开始安装驱动:', deviceId);
 
       // 显示安装提示
       const result = await invoke<string>('install_device_driver', { deviceId });
-      console.log('驱动安装结果:', result);
+      logger.info('驱动安装结果:', result);
 
       // 显示安装结果
       setDriverInstallInfo(result);
@@ -218,7 +219,7 @@ const DevicesPage: React.FC = () => {
         }, 1000);
       }
     } catch (err) {
-      console.error('安装驱动失败:', err);
+      logger.error('安装驱动失败:', err);
       setDriverInstallInfo(`安装驱动失败: ${err}`);
       setShowDriverDialog(true);
     }
@@ -227,16 +228,16 @@ const DevicesPage: React.FC = () => {
   const refreshDeviceStatus = async (deviceId: string) => {
     try {
       setError(null);
-      console.log('刷新设备状态:', deviceId);
+      logger.debug('刷新设备状态:', deviceId);
 
       // 使用新的刷新命令
       const status = await invoke<DeviceStatus>('refresh_device_status', { deviceId });
       if (status) {
         setDeviceStatuses(prev => new Map(prev.set(deviceId, status)));
-        console.log('设备状态已更新:', status);
+        logger.debug('设备状态已更新:', status);
       }
     } catch (err) {
-      console.error(`刷新设备状态失败:`, err);
+      logger.error(`刷新设备状态失败:`, err);
       setError(`刷新设备状态失败: ${err}`);
     }
   };
@@ -246,15 +247,15 @@ const DevicesPage: React.FC = () => {
     setError(null);
 
     try {
-      console.log('刷新所有设备...');
+      logger.info('刷新所有设备...');
       const result = await invoke<DeviceInfo[]>('refresh_all_devices');
-      console.log('刷新结果:', result);
+      logger.info('刷新结果:', result);
       
       // 确保设备列表去重，基于设备ID
       const uniqueDevices = result.filter((device, index, self) => 
         index === self.findIndex(d => d.id === device.id)
       );
-      console.log('去重后设备:', uniqueDevices);
+      logger.debug('去重后设备:', uniqueDevices);
       setDevices(uniqueDevices);
 
       // 获取每个设备的详细状态
@@ -266,7 +267,7 @@ const DevicesPage: React.FC = () => {
             statusMap.set(device.id, status);
           }
         } catch (err) {
-          console.warn(`获取设备 ${device.id} 状态失败:`, err);
+          logger.warn(`获取设备 ${device.id} 状态失败:`, err);
         }
       }
       setDeviceStatuses(statusMap);
@@ -278,7 +279,7 @@ const DevicesPage: React.FC = () => {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
       }
     } catch (err) {
-      console.error('刷新设备失败:', err);
+      logger.error('刷新设备失败:', err);
       setError(`刷新设备失败: ${err}`);
     } finally {
       setLoading(false);
@@ -359,7 +360,7 @@ const DevicesPage: React.FC = () => {
         timestamp: Date.now(),
       });
     } catch (err) {
-      console.warn('记录连接历史失败:', err);
+      logger.warn('记录连接历史失败:', err);
     }
   };
 

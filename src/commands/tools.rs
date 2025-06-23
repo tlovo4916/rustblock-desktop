@@ -316,7 +316,7 @@ async fn compile_arduino_code(code: String, device_type: String) -> Result<Compi
         .args(&[
             "compile",
             "--fqbn", board,
-            sketch_dir.to_str().unwrap()
+            sketch_dir.to_str().ok_or_else(|| format!("无法转换路径为字符串: {:?}", sketch_dir))?
         ])
         .output()
         .map_err(|e| format!("执行编译命令失败: {}", e))?;
@@ -327,9 +327,9 @@ async fn compile_arduino_code(code: String, device_type: String) -> Result<Compi
         let bin_file = sketch_dir.join("sketch.ino.bin");
         
         let firmware_path = if hex_file.exists() {
-            Some(hex_file.to_str().unwrap().to_string())
+            Some(hex_file.to_str().ok_or_else(|| format!("无法转换路径为字符串: {:?}", hex_file))?.to_string())
         } else if bin_file.exists() {
-            Some(bin_file.to_str().unwrap().to_string())
+            Some(bin_file.to_str().ok_or_else(|| format!("无法转换路径为字符串: {:?}", bin_file))?.to_string())
         } else {
             None
         };

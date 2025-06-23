@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Tabs } from 'antd';
+import { logger } from '../utils/logger';
 
 interface DeviceConfigurationProps {
   deviceId: string | null;
@@ -47,7 +48,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
         setConfig(result);
       }
     } catch (error) {
-      console.error('加载设备配置失败:', error);
+      logger.error('加载设备配置失败:', error);
     }
   };
 
@@ -57,7 +58,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
       const result = await invoke<ConfigProfile[]>('list_config_profiles');
       setProfiles(result);
     } catch (error) {
-      console.error('加载配置文件失败:', error);
+      logger.error('加载配置文件失败:', error);
     }
   };
 
@@ -73,7 +74,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
         onConfigSaved();
       }
     } catch (error) {
-      console.error('保存配置失败:', error);
+      logger.error('保存配置失败:', error);
       alert(`保存配置失败: ${error}`);
     } finally {
       setLoading(false);
@@ -99,7 +100,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
       setProfileName('');
       await loadProfiles();
     } catch (error) {
-      console.error('保存配置文件失败:', error);
+      logger.error('保存配置文件失败:', error);
       alert(`保存配置文件失败: ${error}`);
     }
   };
@@ -124,7 +125,7 @@ const DeviceConfiguration: React.FC<DeviceConfigurationProps> = ({ deviceId, onC
         setSelectedProfile(null);
       }
     } catch (error) {
-      console.error('删除配置文件失败:', error);
+      logger.error('删除配置文件失败:', error);
       alert(`删除配置文件失败: ${error}`);
     }
   };

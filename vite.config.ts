@@ -30,13 +30,23 @@ export default defineConfig(async () => ({
       output: {
         manualChunks: {
           // Split vendor chunks for better caching
-          vendor: ['react', 'react-dom'],
-          antd: ['antd'],
-          blockly: ['blockly'],
-          icons: ['lucide-react'],
+          'react-vendor': ['react', 'react-dom'],
+          'antd': ['antd'],
+          'blockly': ['blockly'],
+          'icons': ['lucide-react'],
+          'tauri': ['@tauri-apps/api', '@tauri-apps/plugin-shell', '@tauri-apps/plugin-dialog', '@tauri-apps/plugin-fs', '@tauri-apps/plugin-http'],
+          'utils': ['styled-components'],
         },
+        // 优化chunk命名
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `js/${facadeModuleId}-[hash].js`;
+        },
+        assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
+    // 启用 CSS 代码分割
+    cssCodeSplit: true,
     // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
     // Enable minification in production
@@ -77,8 +87,10 @@ export default defineConfig(async () => ({
 
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'antd', 'blockly'],
+    include: ['react', 'react-dom', 'antd', 'blockly', 'styled-components', 'lucide-react'],
     exclude: ['@tauri-apps/api'],
+    // 强制预构建
+    force: true,
   },
 
   // Environment variables
