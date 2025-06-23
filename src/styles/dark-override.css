@@ -36,6 +36,12 @@
   color: #e8e8e8 !important;
 }
 
+/* 防止切换时出现默认蓝色 */
+html:not(.dark) .ant-switch-checked {
+  background: #1890ff !important;
+  background-color: #1890ff !important;
+}
+
 /* 语言选择器样式 */
 .light-select .ant-select-selector {
   color: #000000 !important;
@@ -63,6 +69,75 @@
 
 .dark-select .ant-select-selection-item {
   color: #e8e8e8 !important;
+}
+
+/* 移除 Switch 组件的蓝色焦点框和过渡效果 */
+.ant-switch:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.ant-switch:focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.ant-switch.ant-switch-checked:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 完全控制 Switch 背景色 */
+.ant-switch {
+  background: rgba(0, 0, 0, 0.25) !important;
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  background-image: none !important;
+  transition: none !important;
+}
+
+.ant-switch-checked {
+  background: #1890ff !important;
+  background-color: #1890ff !important;
+  background-image: none !important;
+}
+
+.dark .ant-switch:not(.ant-switch-checked) {
+  background: rgba(255, 255, 255, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  background-image: none !important;
+}
+
+.dark .ant-switch-checked {
+  background: #177ddc !important;
+  background-color: #177ddc !important;
+  background-image: none !important;
+}
+
+/* 处理所有状态 */
+.ant-switch-inner,
+.ant-switch-loading-icon {
+  transition: margin 0.2s !important;
+}
+
+.ant-switch .ant-switch-handle {
+  transition: all 0.2s !important;
+}
+
+/* 强制移除任何可能的蓝色 */
+.ant-switch::before,
+.ant-switch::after,
+.ant-switch-inner::before,
+.ant-switch-inner::after {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* 处理点击时的样式 */
+.ant-switch:active,
+.ant-switch:focus,
+.ant-switch:hover {
+  background: inherit !important;
+  background-color: inherit !important;
 }
 
 .dark .ant-menu-item:hover .anticon {

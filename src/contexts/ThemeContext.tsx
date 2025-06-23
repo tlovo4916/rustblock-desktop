@@ -34,8 +34,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // 更新文档根元素的主题类
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
   }, [isDarkMode]);
 
@@ -113,6 +115,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             Button: {
               colorBgContainer: isDarkMode ? '#262626' : '#ffffff',
               colorText: isDarkMode ? '#e8e8e8' : 'rgba(0, 0, 0, 0.88)',
+            },
+            Switch: {
+              colorPrimary: isDarkMode ? '#177ddc' : '#1890ff',
+              colorPrimaryHover: isDarkMode ? '#095cb5' : '#40a9ff',
+              colorTextQuaternary: isDarkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.25)',
+              handleBg: '#ffffff',
             },
           },
         }}
