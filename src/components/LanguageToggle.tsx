@@ -2,12 +2,14 @@ import React from 'react';
 import { Select } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { useLocale } from '../contexts/LocaleContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Locale } from '../locales';
 
 const { Option } = Select;
 
 const LanguageToggle: React.FC = () => {
   const { locale, setLocale } = useLocale();
+  const { isDarkMode } = useTheme();
 
   const languages: { value: Locale; label: string; flag: string }[] = [
     { value: 'zh-CN', label: '简体中文', flag: '🇨🇳' },
@@ -21,6 +23,7 @@ const LanguageToggle: React.FC = () => {
       style={{ width: 120 }}
       suffixIcon={<GlobalOutlined />}
       dropdownStyle={{ minWidth: 140 }}
+      className={isDarkMode ? 'dark-select' : 'light-select'}
     >
       {languages.map((lang) => (
         <Option key={lang.value} value={lang.value}>

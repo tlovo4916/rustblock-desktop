@@ -31,7 +31,37 @@
   color: inherit !important;
 }
 
+
 .dark .ant-menu-item .anticon {
+  color: #e8e8e8 !important;
+}
+
+/* 语言选择器样式 */
+.light-select .ant-select-selector {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  border-color: #d9d9d9 !important;
+}
+
+.light-select .ant-select-arrow {
+  color: rgba(0, 0, 0, 0.25) !important;
+}
+
+.light-select .ant-select-selection-item {
+  color: #000000 !important;
+}
+
+.dark-select .ant-select-selector {
+  color: #e8e8e8 !important;
+  background-color: #1f1f1f !important;
+  border-color: #434343 !important;
+}
+
+.dark-select .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.dark-select .ant-select-selection-item {
   color: #e8e8e8 !important;
 }
 
