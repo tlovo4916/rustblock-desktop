@@ -11,8 +11,13 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import ThemeToggle from "./components/ThemeToggle";
+import LanguageToggle from "./components/LanguageToggle";
 import DarkModeStyles from "./components/DarkModeStyles";
 import { useTheme } from "./contexts/ThemeContext";
+import { useTranslation, useLocale } from "./contexts/LocaleContext";
+import { ConfigProvider } from "antd";
+import zhCN from "antd/locale/zh_CN";
+import enUS from "antd/locale/en_US";
 import "./styles.css";
 import "./styles/dark-override.css";
 
@@ -42,47 +47,49 @@ const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [currentPage, setCurrentPage] = useState("home");
   const { isDarkMode } = useTheme();
+  const { t } = useTranslation();
+  const { locale } = useLocale();
 
   const menuItems = [
     { 
       key: "home", 
       icon: <HomeOutlined style={{ fontSize: 16 }} />, 
-      label: "首页" 
+      label: t('menu.home')
     },
     { 
       key: "editor", 
       icon: <CodeOutlined style={{ fontSize: 16 }} />, 
-      label: "代码编辑器" 
+      label: t('menu.editor')
     },
     { 
       key: "debug", 
       icon: <BugOutlined style={{ fontSize: 16 }} />, 
-      label: "调试工具" 
+      label: t('menu.debug')
     },
     { 
       key: "devices", 
       icon: <TeamOutlined style={{ fontSize: 16 }} />, 
-      label: "设备管理" 
+      label: t('menu.devices')
     },
     { 
       key: "ai", 
       icon: <RobotOutlined style={{ fontSize: 16 }} />, 
-      label: "AI 助手" 
+      label: t('menu.ai')
     },
     { 
       key: "tools", 
       icon: <ToolOutlined style={{ fontSize: 16 }} />, 
-      label: "工具箱" 
+      label: t('menu.tools')
     },
     { 
       key: "docs", 
       icon: <FileTextOutlined style={{ fontSize: 16 }} />, 
-      label: "文档" 
+      label: t('menu.docs')
     },
     { 
       key: "settings", 
       icon: <SettingOutlined style={{ fontSize: 16 }} />, 
-      label: "设置" 
+      label: t('menu.settings')
     },
   ];
 
@@ -112,8 +119,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <DarkModeStyles />
+    <ConfigProvider locale={locale === 'zh-CN' ? zhCN : enUS}>
+      <Layout style={{ minHeight: "100vh" }}>
+        <DarkModeStyles />
       <Sider
         collapsible
         collapsed={collapsed}
@@ -165,6 +173,8 @@ const App: React.FC = () => {
             height: 64,
           }}
         >
+          <LanguageToggle />
+          <div style={{ width: 16 }} />
           <ThemeToggle />
         </Header>
         <Content style={{ margin: "0", overflow: "initial" }}>
@@ -172,6 +182,7 @@ const App: React.FC = () => {
         </Content>
       </Layout>
     </Layout>
+    </ConfigProvider>
   );
 };
 

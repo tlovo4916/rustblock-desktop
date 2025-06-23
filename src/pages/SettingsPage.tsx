@@ -6,10 +6,12 @@ import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
+import { useTranslation } from '../contexts/LocaleContext';
 
 const { TabPane } = Tabs;
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [showToolStatus, setShowToolStatus] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
@@ -27,7 +29,7 @@ const SettingsPage: React.FC = () => {
   // 保存AI配置
   const saveAIConfig = async () => {
     if (!apiKey.trim()) {
-      message.error('请输入API密钥');
+      message.error(t('settings.enterApiKey'));
       return;
     }
 
@@ -44,10 +46,10 @@ const SettingsPage: React.FC = () => {
         })
       );
 
-      message.success('AI配置保存成功！现在可以使用AI助手了');
+      message.success(t('settings.saveSuccess'));
     } catch (error) {
       logger.error('保存配置失败:', error);
-      message.error('保存配置失败');
+      message.error(t('settings.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ const SettingsPage: React.FC = () => {
   // 测试API连接
   const testConnection = async () => {
     if (!apiKey.trim()) {
-      message.error('请输入API密钥');
+      message.error(t('settings.enterApiKey'));
       return;
     }
 
@@ -68,13 +70,13 @@ const SettingsPage: React.FC = () => {
       });
 
       if (isConnected) {
-        message.success('API连接测试成功！');
+        message.success(t('settings.testSuccess'));
       } else {
-        message.error('API连接测试失败，请检查密钥和网络连接');
+        message.error(t('settings.testFailed'));
       }
     } catch (error) {
       logger.error('测试连接失败:', error);
-      message.error(`测试失败: ${error}`);
+      message.error(`${t('settings.testFailed')}: ${error}`);
     } finally {
       setTesting(false);
     }
@@ -82,17 +84,17 @@ const SettingsPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <h1>应用设置</h1>
+      <h1>{t('settings.title')}</h1>
       <Card style={{ minHeight: 'calc(100vh - 150px)' }}>
         <Tabs defaultActiveKey="general">
-          <TabPane tab="通用设置" key="general">
+          <TabPane tab={t('settings.general')} key="general">
             <div>
               {/* AI配置 */}
               <div style={{ marginBottom: 32 }}>
-                <h3>🤖 AI助手配置</h3>
+                <h3>{t('settings.aiConfig')}</h3>
                 <div style={{ display: 'grid', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8 }}>DeepSeek API密钥:</label>
+                    <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.apiKey')}:</label>
                     <input
                       style={{
                         width: '100%',
@@ -100,14 +102,14 @@ const SettingsPage: React.FC = () => {
                         border: '1px solid #d9d9d9',
                         borderRadius: 4,
                       }}
-                      placeholder="输入你的DeepSeek API密钥..."
+                      placeholder={t('settings.apiKeyPlaceholder')}
                       type="password"
                       value={apiKey}
                       onChange={e => setApiKey(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8 }}>API服务地址:</label>
+                    <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.apiUrl')}:</label>
                     <input
                       style={{
                         width: '100%',
@@ -132,7 +134,7 @@ const SettingsPage: React.FC = () => {
                       onClick={saveAIConfig}
                       disabled={loading}
                     >
-                      {loading ? '保存中...' : '保存AI配置'}
+                      {loading ? t('settings.saving') : t('settings.save')}
                     </button>
                     <button
                       style={{
@@ -146,7 +148,7 @@ const SettingsPage: React.FC = () => {
                       onClick={testConnection}
                       disabled={testing || !apiKey}
                     >
-                      {testing ? '测试中...' : '测试连接'}
+                      {testing ? t('settings.testing') : t('settings.test')}
                     </button>
                   </div>
                 </div>
@@ -154,12 +156,12 @@ const SettingsPage: React.FC = () => {
 
               {/* 编程环境设置 */}
               <div style={{ marginBottom: 32 }}>
-                <h3>🔧 编程环境</h3>
+                <h3>{t('settings.programming')}</h3>
                 <div style={{ display: 'grid', gap: 16 }}>
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <input type="checkbox" defaultChecked />
-                      自动保存项目 (每30秒)
+                      {t('settings.autoSave')}
                     </label>
                   </div>
                 </div>
@@ -167,10 +169,10 @@ const SettingsPage: React.FC = () => {
 
               {/* 设备设置 */}
               <div style={{ marginBottom: 32 }}>
-                <h3>📱 设备设置</h3>
+                <h3>{t('settings.deviceSettings')}</h3>
                 <div style={{ display: 'grid', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: 8 }}>默认波特率:</label>
+                    <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.baudRate')}:</label>
                     <select
                       style={{
                         padding: 8,
@@ -187,12 +189,12 @@ const SettingsPage: React.FC = () => {
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <input type="checkbox" defaultChecked />
-                      自动检测新设备
+                      {t('settings.autoDetect')}
                     </label>
                   </div>
                   <div>
                     <Button icon={<Wrench size={16} />} onClick={() => setShowToolStatus(true)}>
-                      检查系统工具状态
+                      {t('settings.checkTools')}
                     </Button>
                   </div>
                 </div>
@@ -200,7 +202,7 @@ const SettingsPage: React.FC = () => {
 
               {/* 关于信息 */}
               <div>
-                <h3>ℹ️ 关于</h3>
+                <h3>{t('settings.about')}</h3>
                 <div
                   style={{
                     background: '#f0f0f0',
@@ -212,9 +214,9 @@ const SettingsPage: React.FC = () => {
                   <p>
                     <strong>RustBlock Desktop</strong>
                   </p>
-                  <p>版本: 0.0.1</p>
-                  <p>开发团队: SupieDT Team</p>
-                  <p>基于 Tauri + React + Rust 构建</p>
+                  <p>{t('settings.version')}: 0.0.1</p>
+                  <p>{t('settings.team')}: SupieDT Team</p>
+                  <p>{t('settings.builtWith')}</p>
                   <div style={{ marginTop: 16 }}>
                     <button
                       style={{
@@ -227,7 +229,7 @@ const SettingsPage: React.FC = () => {
                         marginRight: 8,
                       }}
                     >
-                      检查更新
+                      {t('settings.checkUpdate')}
                     </button>
                     <button
                       style={{
@@ -239,7 +241,7 @@ const SettingsPage: React.FC = () => {
                         cursor: 'pointer',
                       }}
                     >
-                      查看日志
+                      {t('settings.viewLogs')}
                     </button>
                   </div>
                 </div>
@@ -247,7 +249,7 @@ const SettingsPage: React.FC = () => {
             </div>
           </TabPane>
 
-          <TabPane tab="性能监控" key="performance">
+          <TabPane tab={t('settings.performance')} key="performance">
             <PerformanceMonitor />
           </TabPane>
         </Tabs>
@@ -255,7 +257,7 @@ const SettingsPage: React.FC = () => {
 
       {/* 工具状态模态框 */}
       <Modal
-        title="系统工具状态"
+        title={t('settings.systemToolsStatus')}
         open={showToolStatus}
         onCancel={() => setShowToolStatus(false)}
         footer={null}

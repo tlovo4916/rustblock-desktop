@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Modal, Tabs } from 'antd';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
+import { useTranslation } from '../contexts/LocaleContext';
 // import SerialMonitor from '../components/SerialMonitor';
 // import DeviceConfiguration from '../components/DeviceConfiguration';
 
@@ -37,6 +38,7 @@ interface DeviceStatus {
 }
 
 const DevicesPage: React.FC = () => {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [deviceStatuses, setDeviceStatuses] = useState<Map<string, DeviceStatus>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -387,7 +389,7 @@ const DevicesPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <h1>设备管理</h1>
+      <h1>{t('devices.title')}</h1>
       <div
         style={{
           padding: 24,
@@ -408,7 +410,7 @@ const DevicesPage: React.FC = () => {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? '🔄 扫描中...' : '🔍 扫描设备'}
+            {loading ? `🔄 ${t('devices.scanning')}` : `🔍 ${t('devices.scanDevices')}`}
           </button>
 
           <button
@@ -423,11 +425,11 @@ const DevicesPage: React.FC = () => {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? '🔄 刷新中...' : '🔄 刷新所有'}
+            {loading ? `🔄 ${t('devices.refreshing')}` : `🔄 ${t('devices.refreshAll')}`}
           </button>
 
           {devices.length > 0 && (
-            <span style={{ color: '#52c41a', fontSize: 14 }}>✅ 发现 {devices.length} 个设备</span>
+            <span style={{ color: '#52c41a', fontSize: 14 }}>✅ {t('devices.foundDevices').replace('{count}', devices.length.toString())}</span>
           )}
         </div>
 
@@ -446,19 +448,19 @@ const DevicesPage: React.FC = () => {
           </div>
         )}
 
-        <h3>检测到的设备</h3>
+        <h3>{t('devices.detectedDevices')}</h3>
         <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
           {devices.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32, color: '#8c8c8c' }}>
-              <p>📱 暂未检测到设备</p>
-              <p>请连接你的 Arduino、micro:bit 或其他支持的硬件设备</p>
+              <p>📱 {t('devices.noDevices')}</p>
+              <p>{t('devices.noDevicesDesc')}</p>
               <p style={{ fontSize: 12, marginTop: 8 }}>
-                如果设备已连接但未显示，请检查：
+                {t('devices.troubleshooting')}
                 <br />
-                • USB连接线是否正常
+                • {t('devices.checkUsb')}
                 <br />
-                • 设备驱动是否已安装
-                <br />• 设备是否被其他程序占用
+                • {t('devices.checkDriver')}
+                <br />• {t('devices.checkOccupied')}
               </p>
             </div>
           ) : (
@@ -512,8 +514,8 @@ const DevicesPage: React.FC = () => {
                             )}
                           </h3>
                           <p style={{ margin: '4px 0', color: '#8c8c8c', fontSize: 14 }}>
-                            端口: {device.port}
-                            {device.manufacturer && ` • 制造商: ${device.manufacturer}`}
+                            {t('devices.port')}: {device.port}
+                            {device.manufacturer && ` • ${t('devices.manufacturer')}: ${device.manufacturer}`}
                           </p>
                           {device.vendor_id && device.product_id && (
                             <p style={{ margin: 0, color: '#8c8c8c', fontSize: 12 }}>
@@ -544,12 +546,12 @@ const DevicesPage: React.FC = () => {
                           }}
                         >
                           {device.device_type === 'Unknown'
-                            ? '❓ 未知设备'
+                            ? `❓ ${t('devices.unknownDevice')}`
                             : isReady
-                              ? '✅ 就绪'
+                              ? `✅ ${t('devices.ready')}`
                               : driverInstalled
-                                ? '⚠️ 需要配置'
-                                : '❌ 需要驱动'}
+                                ? `⚠️ ${t('devices.needConfig')}`
+                                : `❌ ${t('devices.needDriver')}`}
                         </div>
                         {isConnected && (
                           <div
@@ -561,7 +563,7 @@ const DevicesPage: React.FC = () => {
                               fontSize: 10,
                             }}
                           >
-                            🔗 已连接
+                            🔗 {t('devices.connected')}
                           </div>
                         )}
                       </div>
@@ -581,19 +583,19 @@ const DevicesPage: React.FC = () => {
                         <div
                           style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}
                         >
-                          <span>🔧 驱动状态:</span>
+                          <span>🔧 {t('devices.driverStatus')}:</span>
                           <span
                             style={{
                               color: status.driver_status.installed ? '#52c41a' : '#ff4d4f',
                               fontWeight: 'bold',
                             }}
                           >
-                            {status.driver_status.installed ? '已安装' : '未安装'}
+                            {status.driver_status.installed ? t('devices.installed') : t('devices.notInstalled')}
                           </span>
                         </div>
                         {status.driver_status.driver_info && (
                           <div style={{ color: '#666', marginLeft: 20 }}>
-                            驱动: {status.driver_status.driver_info.name}
+                            {t('devices.driver')}: {status.driver_status.driver_info.name}
                             {status.driver_status.driver_info.version &&
                               ` (${status.driver_status.driver_info.version})`}
                           </div>
@@ -613,7 +615,7 @@ const DevicesPage: React.FC = () => {
                         }}
                       >
                         <div style={{ marginBottom: 4 }}>
-                          <span>💻 推荐语言: </span>
+                          <span>💻 {t('devices.recommendedLanguage')}: </span>
                           <span
                             style={{
                               background: '#1890ff',
@@ -627,7 +629,7 @@ const DevicesPage: React.FC = () => {
                           </span>
                         </div>
                         <div>
-                          <span>🔧 支持语言: </span>
+                          <span>🔧 {t('devices.supportedLanguages')}: </span>
                           {status.supported_languages.map(lang => (
                             <span
                               key={lang}
@@ -660,16 +662,16 @@ const DevicesPage: React.FC = () => {
                         }}
                       >
                         <div style={{ color: '#d46b08', marginBottom: 4, fontWeight: 'bold' }}>
-                          ⚠️ 未知设备类型
+                          ⚠️ {t('devices.unknownDeviceType')}
                         </div>
                         <div style={{ color: '#666', fontSize: 11 }}>
-                          该设备未被识别为支持的开发板类型。
+                          {t('devices.unknownDeviceDesc')}
                           <br />
-                          • 无法自动安装驱动程序
+                          • {t('devices.cannotInstallDriver')}
                           <br />
-                          • 无法推荐编程语言
+                          • {t('devices.cannotRecommendLanguage')}
                           <br />
-                          • 请确认设备是否为 Arduino、ESP32、micro:bit 等支持的设备
+                          • {t('devices.confirmSupportedDevice')}
                         </div>
                       </div>
                     )}
@@ -689,7 +691,7 @@ const DevicesPage: React.FC = () => {
                             fontSize: 12,
                           }}
                         >
-                          🔧 安装驱动
+                          🔧 {t('devices.installDriver')}
                         </button>
                       )}
 
@@ -706,7 +708,7 @@ const DevicesPage: React.FC = () => {
                             fontSize: 12,
                           }}
                         >
-                          🔗 连接设备
+                          🔗 {t('devices.connect')}
                         </button>
                       )}
 
@@ -724,7 +726,7 @@ const DevicesPage: React.FC = () => {
                               fontSize: 12,
                             }}
                           >
-                            🔌 断开连接
+                            🔌 {t('devices.disconnect')}
                           </button>
 
                           <button
@@ -739,7 +741,7 @@ const DevicesPage: React.FC = () => {
                               fontSize: 12,
                             }}
                           >
-                            📊 串口监视器
+                            📊 {t('devices.serialMonitor')}
                           </button>
                         </>
                       )}
@@ -757,7 +759,7 @@ const DevicesPage: React.FC = () => {
                             fontSize: 12,
                           }}
                         >
-                          ⚙️ 配置
+                          ⚙️ {t('devices.configure')}
                         </button>
                       )}
 
@@ -773,7 +775,7 @@ const DevicesPage: React.FC = () => {
                           fontSize: 12,
                         }}
                       >
-                        🔄 刷新状态
+                        🔄 {t('devices.refreshStatus')}
                       </button>
                     </div>
                   </div>
@@ -784,7 +786,7 @@ const DevicesPage: React.FC = () => {
         </div>
 
         <div style={{ marginTop: 32 }}>
-          <h3>支持的设备类型</h3>
+          <h3>{t('devices.supportedDevices')}</h3>
           <div
             style={{
               display: 'grid',
@@ -793,7 +795,7 @@ const DevicesPage: React.FC = () => {
             }}
           >
             <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: 16 }}>
-              <h4>🔧 Arduino 系列</h4>
+              <h4>🔧 {t('devices.arduinoSeries')}</h4>
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 <li>Arduino Uno</li>
                 <li>Arduino Nano</li>
@@ -809,7 +811,7 @@ const DevicesPage: React.FC = () => {
               </ul>
             </div>
             <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: 16 }}>
-              <h4>🚀 ESP32 系列</h4>
+              <h4>🚀 {t('devices.esp32Series')}</h4>
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 <li>ESP32 DevKit</li>
                 <li>ESP32-S2</li>
@@ -854,7 +856,7 @@ const DevicesPage: React.FC = () => {
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
-            <h3 style={{ marginTop: 0, color: '#1890ff' }}>🔧 驱动安装信息</h3>
+            <h3 style={{ marginTop: 0, color: '#1890ff' }}>🔧 {t('devices.driverInstallInfo')}</h3>
             <div
               style={{
                 background: '#f5f5f5',
@@ -884,7 +886,7 @@ const DevicesPage: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                确定
+                {t('common.ok')}
               </button>
             </div>
           </div>
@@ -894,7 +896,7 @@ const DevicesPage: React.FC = () => {
       {/* 串口监视器模态框 */}
       {showSerialMonitor && (
         <Modal
-          title={`串口监视器 - ${showSerialMonitor.port}`}
+          title={`${t('devices.serialMonitor')} - ${showSerialMonitor.port}`}
           open={true}
           onCancel={() => setShowSerialMonitor(null)}
           footer={null}
@@ -903,13 +905,13 @@ const DevicesPage: React.FC = () => {
           style={{ height: '600px' }}
           bodyStyle={{ height: '500px', padding: 0 }}
         >
-          <div>串口监视器功能暂时关闭</div>
+          <div>{t('devices.serialMonitorDisabled')}</div>
         </Modal>
       )}
 
       {/* 设备配置模态框 */}
       <Modal
-        title="设备配置管理"
+        title={t('devices.deviceConfiguration')}
         open={showConfiguration}
         onCancel={() => {
           setShowConfiguration(false);
@@ -921,7 +923,7 @@ const DevicesPage: React.FC = () => {
         style={{ height: '700px' }}
         bodyStyle={{ height: '600px', padding: 0 }}
       >
-        <div>设备配置功能暂时关闭</div>
+        <div>{t('devices.configurationDisabled')}</div>
       </Modal>
     </PageContainer>
   );

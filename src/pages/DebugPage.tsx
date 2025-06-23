@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { safeInvoke } from '../utils/tauri';
 import PageContainer from '../components/PageContainer';
+import { useTranslation } from '../contexts/LocaleContext';
 
 const DebugPage: React.FC = () => {
+  const { t } = useTranslation();
   const [result, setResult] = useState<string>('');
 
   const checkEnvironment = () => {
@@ -66,7 +68,7 @@ const DebugPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <h1>Tauri 环境调试</h1>
+      <h1>{t('debug.title')}</h1>
       <div
         style={{
           padding: 24,
@@ -76,15 +78,15 @@ const DebugPage: React.FC = () => {
       >
         <div style={{ marginBottom: 16 }}>
           <button onClick={checkEnvironment} style={{ marginRight: 8 }}>
-            检查环境
+            {t('debug.checkEnvironment')}
           </button>
           <button onClick={testInvoke} style={{ marginRight: 8 }}>
-            测试 invoke
+            {t('debug.testInvoke')}
           </button>
           <button onClick={testSafeInvoke} style={{ marginRight: 8 }}>
-            测试 safeInvoke
+            {t('debug.testSafeInvoke')}
           </button>
-          <button onClick={testDeepSeekConnection}>测试 DeepSeek 连接</button>
+          <button onClick={testDeepSeekConnection}>{t('debug.testDeepSeek')}</button>
         </div>
 
         <pre
@@ -95,7 +97,7 @@ const DebugPage: React.FC = () => {
             overflow: 'auto',
           }}
         >
-          {result || '点击按钮进行测试'}
+          {result || t('debug.clickToTest')}
         </pre>
       </div>
     </PageContainer>

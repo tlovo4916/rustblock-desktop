@@ -6,6 +6,7 @@ import BlocklyWorkspace from '../components/BlocklyWorkspace';
 import { safeInvoke } from '../components/MockBackend';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
+import { useTranslation } from '../contexts/LocaleContext';
 
 const { Option } = Select;
 
@@ -18,6 +19,7 @@ interface Device {
 }
 
 const EditorPage: React.FC = () => {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +39,7 @@ const EditorPage: React.FC = () => {
       }
     } catch (error) {
       logger.error('扫描设备失败:', error);
-      message.error('扫描设备失败');
+      message.error(t('common.error') + ': ' + t('devices.refresh'));
     } finally {
       setIsLoading(false);
     }
@@ -46,12 +48,12 @@ const EditorPage: React.FC = () => {
   // 预上传检查
   const performPreUploadCheck = async (code: string, language: string) => {
     if (!selectedDevice) {
-      message.error('请先选择设备');
+      message.error(t('editor.selectDevice'));
       return false;
     }
 
     if (!code.trim()) {
-      message.error('代码不能为空');
+      message.error(t('editor.emptyCode'));
       return false;
     }
 
@@ -62,13 +64,13 @@ const EditorPage: React.FC = () => {
       });
 
       if (!deviceStatus?.ready) {
-        message.error('设备未准备就绪，请检查设备连接和驱动');
+        message.error(t('editor.deviceNotReady'));
         return false;
       }
 
       // 检查语言兼容性
       if (!deviceStatus.supported_languages.includes(language)) {
-        message.error(`设备不支持 ${language} 语言`);
+        message.error(t('editor.languageNotSupported').replace('{language}', language));
         return false;
       }
 
@@ -78,16 +80,16 @@ const EditorPage: React.FC = () => {
 
       if (!tools[requiredTool]) {
         const install = await Modal.confirm({
-          title: '缺少上传工具',
-          content: `需要安装 ${requiredTool} 才能上传代码，是否自动安装？`,
+          title: t('editor.missingTool'),
+          content: t('editor.missingToolContent').replace('{tool}', requiredTool),
         });
 
         if (install) {
           try {
             await safeInvoke('install_missing_tools');
-            message.success('工具安装成功');
+            message.success(t('editor.toolInstalled'));
           } catch (err) {
-            message.error('工具安装失败，请手动安装');
+            message.error(t('editor.toolInstallFailed'));
             return false;
           }
         } else {
@@ -98,7 +100,7 @@ const EditorPage: React.FC = () => {
       return true;
     } catch (error) {
       logger.error('预上传检查失败:', error);
-      message.error('设备状态检查失败');
+      message.error(t('editor.deviceCheckFailed'));
       return false;
     }
   };
@@ -131,7 +133,7 @@ const EditorPage: React.FC = () => {
   return (
     <PageContainer>
       <Card
-        title="可视化编程环境"
+        title={t('editor.title')}
         extra={
           <Space>
             <Select
@@ -140,7 +142,7 @@ const EditorPage: React.FC = () => {
                 const device = devices.find(d => d.id === deviceId);
                 setSelectedDevice(device || null);
               }}
-              placeholder="选择设备"
+              placeholder={t('editor.selectDevice')}
               style={{ width: 200 }}
               loading={isLoading}
             >
@@ -152,7 +154,7 @@ const EditorPage: React.FC = () => {
             </Select>
 
             <Button icon={<RefreshCw size={16} />} onClick={scanDevices} loading={isLoading}>
-              刷新设备
+              {t('devices.refresh')}
             </Button>
           </Space>
         }
@@ -160,10 +162,10 @@ const EditorPage: React.FC = () => {
       >
         {selectedDevice ? (
           <div style={{ color: '#52c41a' }}>
-            ✓ 已选择设备: {selectedDevice.name} ({selectedDevice.device_type})
+            ✓ {t('editor.deviceSelected')}: {selectedDevice.name} ({selectedDevice.device_type})
           </div>
         ) : (
-          <div style={{ color: '#faad14' }}>⚠️ 请连接设备并选择目标设备</div>
+          <div style={{ color: '#faad14' }}>⚠️ {t('editor.connectAndSelect')}</div>
         )}
       </Card>
 
@@ -178,7 +180,7 @@ const EditorPage: React.FC = () => {
       {/* 上传进度对话框 */}
       {showUploadProgress && selectedDevice && (
         <Modal
-          title={`上传代码到 ${selectedDevice.name}`}
+          title={t('editor.uploadingTo').replace('{device}', selectedDevice.name)}
           open={showUploadProgress}
           onCancel={() => {
             setShowUploadProgress(false);
@@ -186,7 +188,7 @@ const EditorPage: React.FC = () => {
           }}
           footer={null}
         >
-          <div>上传功能暂时关闭</div>
+          <div>{t('editor.uploadDisabled')}</div>
         </Modal>
       )}
     </PageContainer>

@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { safeInvoke } from '../utils/tauri';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
+import { useTranslation } from '../contexts/LocaleContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -16,10 +17,11 @@ interface ChatMessage {
 }
 
 const AIPage: React.FC = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: '哈喽哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
+      content: t('ai.welcomeMessage'),
       timestamp: new Date(),
     },
   ]);
@@ -91,7 +93,7 @@ const AIPage: React.FC = () => {
     if (!inputValue.trim()) return;
 
     if (!apiKey) {
-      message.error('请先在设置页面配置DeepSeek API密钥');
+      message.error(t('ai.noApiKey'));
       return;
     }
 
@@ -104,14 +106,14 @@ const AIPage: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setLoading(true);
-    setLoadingStatus('正在连接AI...');
+    setLoadingStatus(t('ai.connectingAI'));
 
     try {
       // 准备消息历史
       const chatMessages: ChatMessage[] = [
         {
           role: 'system',
-          content: '你是编程助手，简洁回答，多用emoji。',
+          content: t('ai.systemPrompt'),
         },
         // 只保留最近5条消息历史
         ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
@@ -119,7 +121,7 @@ const AIPage: React.FC = () => {
       ];
 
       // 通过Tauri后端调用API
-      setLoadingStatus('AI正在思考...');
+      setLoadingStatus(t('ai.thinking'));
       const response = await safeInvoke<string>('chat_with_deepseek', {
         apiKey,
         apiUrl,
@@ -140,8 +142,8 @@ const AIPage: React.FC = () => {
         setTypingContent('');
       });
     } catch (error) {
-      logger.error('发送消息失败:', error);
-      message.error(`发送失败: ${error}`);
+      logger.error(t('ai.sendFailed'), error);
+      message.error(`${t('ai.sendFailed')}: ${error}`);
       setLoading(false);
       setLoadingStatus('');
     }
@@ -163,7 +165,7 @@ const AIPage: React.FC = () => {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-      <h1>AI 编程助手</h1>
+      <h1>{t('ai.title')}</h1>
       <div
         style={{
           padding: 24,
@@ -174,7 +176,7 @@ const AIPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 24, height: 500 }}>
           {/* 聊天界面 */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <h3>💬 与AI助手对话</h3>
+            <h3>💬 {t('ai.chatWithAI')}</h3>
 
             {!apiKey && (
               <div
@@ -187,7 +189,7 @@ const AIPage: React.FC = () => {
                   color: '#d46b08',
                 }}
               >
-                ⚠️ 请先在设置页面配置DeepSeek API密钥才能使用AI对话功能
+                ⚠️ {t('ai.configureApiKey')}
               </div>
             )}
 
@@ -221,7 +223,7 @@ const AIPage: React.FC = () => {
                       wordBreak: 'break-word',
                     }}
                   >
-                    <strong>{msg.role === 'user' ? ' ' : ' 🐱 小派:'}</strong>
+                    <strong>{msg.role === 'user' ? ' ' : ` 🐱 ${t('ai.assistantName')}:`}</strong>
                     <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>{msg.content}</div>
                     <div
                       style={{
@@ -253,7 +255,7 @@ const AIPage: React.FC = () => {
                       wordBreak: 'break-word',
                     }}
                   >
-                    <strong>🤖 AI助手:</strong>
+                    <strong>🤖 {t('ai.aiAssistant')}:</strong>
                     <div style={{ marginTop: 4, whiteSpace: 'pre-wrap' }}>
                       {typingContent}
                       <span style={{ opacity: 0.5 }}>|</span>
@@ -282,7 +284,7 @@ const AIPage: React.FC = () => {
                       animation: 'spin 1s linear infinite',
                     }}
                   ></div>
-                  {loadingStatus || 'AI正在思考中...'}
+                  {loadingStatus || t('ai.thinking')}
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -296,7 +298,7 @@ const AIPage: React.FC = () => {
                   border: '1px solid #d9d9d9',
                   borderRadius: 4,
                 }}
-                placeholder={apiKey ? '给小派提问题吧~' : '请先配置API密钥'}
+                placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -314,22 +316,22 @@ const AIPage: React.FC = () => {
                 onClick={sendMessage}
                 disabled={!apiKey || loading}
               >
-                {loading ? '发送中...' : '发送'}
+                {loading ? t('ai.sending') : t('ai.send')}
               </button>
             </div>
           </div>
 
           {/* 快速提问 */}
           <div style={{ width: 300 }}>
-            <h3>⚡ 快速提问</h3>
+            <h3>⚡ {t('ai.quickQuestions')}</h3>
             <div style={{ display: 'grid', gap: 8 }}>
               {[
-                '什么是变量？',
-                '如何让LED灯闪烁？',
-                '什么是循环？',
-                '如何读取按钮状态？',
-                '什么是函数？',
-                '如何使用蜂鸣器？',
+                t('ai.question1'),
+                t('ai.question2'),
+                t('ai.question3'),
+                t('ai.question4'),
+                t('ai.question5'),
+                t('ai.question6'),
               ].map(question => (
                 <button
                   key={question}
@@ -362,12 +364,12 @@ const AIPage: React.FC = () => {
                 fontSize: 12,
               }}
             >
-              <strong>💡 提示：</strong>
+              <strong>💡 {t('ai.tips')}:</strong>
               <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-                <li>可以问我任何编程问题</li>
-                <li>我会用简单的语言解释</li>
-                <li>遇到错误可以问我怎么解决</li>
-                <li>想做什么项目也可以问我哦！</li>
+                <li>{t('ai.tip1')}</li>
+                <li>{t('ai.tip2')}</li>
+                <li>{t('ai.tip3')}</li>
+                <li>{t('ai.tip4')}</li>
               </ul>
             </div>
           </div>
