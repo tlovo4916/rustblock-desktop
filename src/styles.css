@@ -140,8 +140,20 @@ body {
   color: #e8e8e8 !important;
 }
 
+.dark .ant-menu-item .ant-menu-item-icon svg {
+  fill: currentColor !important;
+}
+
 .dark .ant-menu-item .ant-menu-title-content {
   color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-item .anticon {
+  color: #e8e8e8 !important;
+}
+
+.dark .ant-menu-item .anticon svg {
+  fill: currentColor !important;
 }
 
 .dark .ant-menu-item:hover {
@@ -150,8 +162,14 @@ body {
 }
 
 .dark .ant-menu-item:hover .ant-menu-item-icon,
-.dark .ant-menu-item:hover .ant-menu-title-content {
+.dark .ant-menu-item:hover .ant-menu-title-content,
+.dark .ant-menu-item:hover .anticon {
   color: #ffffff !important;
+}
+
+.dark .ant-menu-item:hover .ant-menu-item-icon svg,
+.dark .ant-menu-item:hover .anticon svg {
+  fill: currentColor !important;
 }
 
 .dark .ant-menu-item-selected {
@@ -160,8 +178,14 @@ body {
 }
 
 .dark .ant-menu-item-selected .ant-menu-item-icon,
-.dark .ant-menu-item-selected .ant-menu-title-content {
+.dark .ant-menu-item-selected .ant-menu-title-content,
+.dark .ant-menu-item-selected .anticon {
   color: #1890ff !important;
+}
+
+.dark .ant-menu-item-selected .ant-menu-item-icon svg,
+.dark .ant-menu-item-selected .anticon svg {
+  fill: currentColor !important;
 }
 
 .dark .ant-menu-item-selected::after {

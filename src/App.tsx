@@ -44,14 +44,46 @@ const App: React.FC = () => {
   const { isDarkMode } = useTheme();
 
   const menuItems = [
-    { key: "home", icon: <HomeOutlined />, label: "首页" },
-    { key: "editor", icon: <CodeOutlined />, label: "代码编辑器" },
-    { key: "debug", icon: <BugOutlined />, label: "调试工具" },
-    { key: "devices", icon: <TeamOutlined />, label: "设备管理" },
-    { key: "ai", icon: <RobotOutlined />, label: "AI 助手" },
-    { key: "tools", icon: <ToolOutlined />, label: "工具箱" },
-    { key: "docs", icon: <FileTextOutlined />, label: "文档" },
-    { key: "settings", icon: <SettingOutlined />, label: "设置" },
+    { 
+      key: "home", 
+      icon: <HomeOutlined style={{ fontSize: 16 }} />, 
+      label: "首页" 
+    },
+    { 
+      key: "editor", 
+      icon: <CodeOutlined style={{ fontSize: 16 }} />, 
+      label: "代码编辑器" 
+    },
+    { 
+      key: "debug", 
+      icon: <BugOutlined style={{ fontSize: 16 }} />, 
+      label: "调试工具" 
+    },
+    { 
+      key: "devices", 
+      icon: <TeamOutlined style={{ fontSize: 16 }} />, 
+      label: "设备管理" 
+    },
+    { 
+      key: "ai", 
+      icon: <RobotOutlined style={{ fontSize: 16 }} />, 
+      label: "AI 助手" 
+    },
+    { 
+      key: "tools", 
+      icon: <ToolOutlined style={{ fontSize: 16 }} />, 
+      label: "工具箱" 
+    },
+    { 
+      key: "docs", 
+      icon: <FileTextOutlined style={{ fontSize: 16 }} />, 
+      label: "文档" 
+    },
+    { 
+      key: "settings", 
+      icon: <SettingOutlined style={{ fontSize: 16 }} />, 
+      label: "设置" 
+    },
   ];
 
   const renderContent = () => {
