@@ -142,7 +142,7 @@ export const zhCN = {
     error: '发生错误',
     noApiKey: '请先在设置中配置 DeepSeek API 密钥',
     configureNow: '现在配置',
-    welcomeMessage: '哈喕哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
+    welcomeMessage: '哈喽哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
     connectingAI: '正在连接AI...',
     systemPrompt: '你是编程助手，简洁回答，多用emoji。',
     sendFailed: '发送失败',

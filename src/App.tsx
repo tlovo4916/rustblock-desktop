@@ -143,6 +143,7 @@ const App: React.FC = () => {
             height: 32,
             margin: 16,
             background: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#1890ff",
+            border: isDarkMode ? "1px solid rgba(255, 255, 255, 0.3)" : "1px solid #1890ff",
             borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
