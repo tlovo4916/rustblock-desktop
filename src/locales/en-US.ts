@@ -150,7 +150,7 @@ export const enUS = {
     configureApiKey: 'Please configure DeepSeek API key in settings to use AI chat',
     assistantName: 'Xiao Pai',
     aiAssistant: 'AI Assistant',
-    askQuestion: 'Ask Xiao Pai a question~',
+    askQuestion: 'Ask Paipai a question~',
     configureApiKeyFirst: 'Please configure API key first',
     sending: 'Sending...',
     quickQuestions: 'Quick Questions',
@@ -165,6 +165,11 @@ export const enUS = {
     tip2: 'I will explain in simple language',
     tip3: 'If you encounter errors, ask me how to solve them',
     tip4: 'You can also ask me about project ideas!',
+    newChat: 'New Chat',
+    chatHistory: 'Chat History',
+    delete: 'Delete',
+    confirmDelete: 'Confirm Delete',
+    deleteSessionTip: 'This action cannot be undone. Are you sure you want to delete this conversation?',
   },
   
   // Settings

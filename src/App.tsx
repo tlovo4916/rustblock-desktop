@@ -6,12 +6,12 @@ import {
   ToolOutlined,
   SettingOutlined,
   BugOutlined,
-  TeamOutlined,
   FileTextOutlined,
   MessageOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
 import AIIcon from "./components/AIIcon";
+import DeviceBoardIcon from "./components/DeviceBoardIcon";
 import ThemeToggle from "./components/ThemeToggle";
 import LanguageToggle from "./components/LanguageToggle";
 import DarkModeStyles from "./components/DarkModeStyles";
@@ -90,7 +90,7 @@ const App: React.FC = () => {
     },
     { 
       key: "devices", 
-      icon: <TeamOutlined style={{ fontSize: 16 }} />, 
+      icon: <DeviceBoardIcon style={{ fontSize: 16 }} />, 
       label: t('menu.devices')
     },
     { 

@@ -165,6 +165,11 @@ export const zhCN = {
     tip2: '我会用简单的语言解释',
     tip3: '遇到错误可以问我怎么解决',
     tip4: '想做什么项目也可以问我哦！',
+    newChat: '新对话',
+    chatHistory: '历史对话',
+    delete: '删除',
+    confirmDelete: '确认删除',
+    deleteSessionTip: '删除后无法恢复，确定要删除这个对话吗？',
   },
   
   // 设置

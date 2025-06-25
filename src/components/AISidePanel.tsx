@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { message, Input, Button, Divider, Empty, Spin } from 'antd';
-import { SendOutlined, BulbOutlined } from '@ant-design/icons';
+import { message, Input, Button, Divider, Empty, Spin, Dropdown, Menu, Modal, List, Typography, Tooltip } from 'antd';
+import { SendOutlined, BulbOutlined, HistoryOutlined, PlusOutlined, DeleteOutlined, MoreOutlined, MessageOutlined } from '@ant-design/icons';
 import { safeInvoke } from '../utils/tauri';
 import { logger } from '../utils/logger';
 import { useTranslation } from '../contexts/LocaleContext';
@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const { TextArea } = Input;
+const { Text } = Typography;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,26 +23,69 @@ interface ChatMessage {
   content: string;
 }
 
+interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const AISidePanel: React.FC = () => {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: t('ai.welcomeMessage'),
-      timestamp: new Date(),
-    },
-  ]);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
   const [typingContent, setTypingContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 加载API配置
+  // 创建新会话
+  const createNewSession = () => {
+    const newSession: ChatSession = {
+      id: Date.now().toString(),
+      title: t('ai.newChat'),
+      messages: [
+        {
+          role: 'assistant',
+          content: t('ai.welcomeMessage'),
+          timestamp: new Date(),
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    setSessions(prev => {
+      const updatedSessions = [newSession, ...prev];
+      saveSessionsToStorage(updatedSessions);
+      return updatedSessions;
+    });
+    
+    setCurrentSessionId(newSession.id);
+    setMessages(newSession.messages);
+    setShowHistory(false);
+    
+    return newSession;
+  };
+
+  // 保存会话到localStorage
+  const saveSessionsToStorage = (sessionsToSave: ChatSession[]) => {
+    try {
+      localStorage.setItem('ai_chat_sessions', JSON.stringify(sessionsToSave));
+    } catch (error) {
+      logger.error('保存会话失败', error);
+    }
+  };
+
+  // 加载API配置和历史会话
   useEffect(() => {
     const loadConfig = () => {
       const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
@@ -50,7 +94,45 @@ const AISidePanel: React.FC = () => {
       setApiUrl(savedApiUrl);
     };
 
+    const loadSessions = () => {
+      try {
+        const savedSessions = localStorage.getItem('ai_chat_sessions');
+        if (savedSessions) {
+          const parsedSessions = JSON.parse(savedSessions);
+          // 转换日期字符串为Date对象
+          const sessionsWithDates = parsedSessions.map((session: any) => ({
+            ...session,
+            messages: session.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            })),
+            createdAt: new Date(session.createdAt),
+            updatedAt: new Date(session.updatedAt),
+          }));
+          setSessions(sessionsWithDates);
+          
+          // 加载最新的会话
+          if (sessionsWithDates.length > 0) {
+            const latestSession = sessionsWithDates[0];
+            setCurrentSessionId(latestSession.id);
+            setMessages(latestSession.messages);
+          } else {
+            // 没有历史会话，直接使用createNewSession
+            setTimeout(() => createNewSession(), 0);
+          }
+        } else {
+          // localStorage中没有保存的会话
+          setTimeout(() => createNewSession(), 0);
+        }
+      } catch (error) {
+        logger.error('加载会话失败', error);
+        // 出错时创建新会话
+        setTimeout(() => createNewSession(), 0);
+      }
+    };
+
     loadConfig();
+    loadSessions();
 
     // 监听配置更新事件
     const handleConfigUpdate = (event: any) => {
@@ -77,11 +159,14 @@ const AISidePanel: React.FC = () => {
   const typeWriterEffect = (text: string, onComplete: () => void) => {
     setIsTyping(true);
     setTypingContent('');
+    
+    // 将字符串转换为字符数组，正确处理emoji和Unicode字符
+    const chars = Array.from(text);
     let index = 0;
 
     const typeNext = () => {
-      if (index < text.length) {
-        setTypingContent(prev => prev + text[index]);
+      if (index < chars.length) {
+        setTypingContent(prev => prev + chars[index]);
         index++;
         typingTimeoutRef.current = setTimeout(typeNext, 15);
       } else {
@@ -91,6 +176,86 @@ const AISidePanel: React.FC = () => {
     };
 
     typeNext();
+  };
+
+  // 切换会话
+  const switchSession = (sessionId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      setCurrentSessionId(sessionId);
+      setMessages(session.messages);
+      setShowHistory(false);
+    }
+  };
+
+  // 删除会话
+  const deleteSession = (sessionId: string) => {
+    Modal.confirm({
+      title: t('ai.confirmDelete'),
+      content: t('ai.deleteSessionTip'),
+      onOk: () => {
+        setSessions(prev => {
+          const updatedSessions = prev.filter(s => s.id !== sessionId);
+          
+          // 如果删除后没有会话了，创建一个新的
+          if (updatedSessions.length === 0) {
+            const newSession: ChatSession = {
+              id: Date.now().toString(),
+              title: t('ai.newChat'),
+              messages: [
+                {
+                  role: 'assistant',
+                  content: t('ai.welcomeMessage'),
+                  timestamp: new Date(),
+                },
+              ],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            
+            const finalSessions = [newSession];
+            saveSessionsToStorage(finalSessions);
+            
+            // 设置新会话为当前会话
+            setCurrentSessionId(newSession.id);
+            setMessages(newSession.messages);
+            setShowHistory(false);
+            
+            return finalSessions;
+          } else {
+            // 还有其他会话
+            saveSessionsToStorage(updatedSessions);
+            
+            // 如果删除的是当前会话，切换到第一个
+            if (currentSessionId === sessionId) {
+              setCurrentSessionId(updatedSessions[0].id);
+              setMessages(updatedSessions[0].messages);
+            }
+            
+            return updatedSessions;
+          }
+        });
+      },
+    });
+  };
+
+  // 更新当前会话
+  const updateCurrentSession = (newMessages: Message[]) => {
+    const updatedSessions = sessions.map(session => {
+      if (session.id === currentSessionId) {
+        const firstUserMessage = newMessages.find(msg => msg.role === 'user');
+        return {
+          ...session,
+          messages: newMessages,
+          title: firstUserMessage ? firstUserMessage.content.slice(0, 30) + (firstUserMessage.content.length > 30 ? '...' : '') : session.title,
+          updatedAt: new Date(),
+        };
+      }
+      return session;
+    });
+    
+    setSessions(updatedSessions);
+    saveSessionsToStorage(updatedSessions);
   };
 
   // 发送消息
@@ -108,7 +273,9 @@ const AISidePanel: React.FC = () => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    updateCurrentSession(newMessages);
     setInputValue('');
     setLoading(true);
 
@@ -136,7 +303,9 @@ const AISidePanel: React.FC = () => {
           content: response,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, assistantMessage]);
+        const updatedMessages = [...messages, userMessage, assistantMessage];
+        setMessages(updatedMessages);
+        updateCurrentSession(updatedMessages);
         setTypingContent('');
       });
     } catch (error) {
@@ -159,6 +328,117 @@ const AISidePanel: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column',
     }}>
+      {/* 顶部工具栏 */}
+      <div style={{
+        padding: '8px 16px',
+        borderBottom: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: isDarkMode ? '#1f1f1f' : '#fafafa',
+      }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Tooltip title={t('ai.newChat')}>
+            <Button
+              icon={<PlusOutlined />}
+              onClick={createNewSession}
+              size="small"
+            />
+          </Tooltip>
+          <Tooltip title={t('ai.chatHistory')}>
+            <Button
+              icon={<HistoryOutlined />}
+              onClick={() => setShowHistory(!showHistory)}
+              type={showHistory ? 'primary' : 'default'}
+              size="small"
+            />
+          </Tooltip>
+        </div>
+        <Text 
+          style={{ 
+            fontSize: 12, 
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.45)',
+            maxWidth: 200,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {sessions.find(s => s.id === currentSessionId)?.title || t('ai.newChat')}
+        </Text>
+      </div>
+
+      {/* 历史对话列表 */}
+      {showHistory && (
+        <div style={{
+          position: 'absolute',
+          top: 48,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: isDarkMode ? '#141414' : '#fff',
+          zIndex: 10,
+          overflow: 'auto',
+          borderTop: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
+        }}>
+          <List
+            dataSource={sessions}
+            renderItem={(session) => (
+              <List.Item
+                style={{
+                  cursor: 'pointer',
+                  background: session.id === currentSessionId ? (isDarkMode ? '#262626' : '#f0f0f0') : 'transparent',
+                  padding: '12px 16px',
+                }}
+                onClick={() => switchSession(session.id)}
+                actions={[
+                  <Dropdown
+                    key="more"
+                    overlay={
+                      <Menu>
+                        <Menu.Item
+                          key="delete"
+                          icon={<DeleteOutlined />}
+                          danger
+                          onClick={(e) => {
+                            e.domEvent.stopPropagation();
+                            deleteSession(session.id);
+                          }}
+                        >
+                          {t('ai.delete')}
+                        </Menu.Item>
+                      </Menu>
+                    }
+                    trigger={['click']}
+                  >
+                    <Button
+                      type="text"
+                      icon={<MoreOutlined />}
+                      size="small"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </Dropdown>
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={<MessageOutlined style={{ fontSize: 16, color: isDarkMode ? '#177ddc' : '#1890ff' }} />}
+                  title={
+                    <Text strong style={{ fontSize: 14 }}>
+                      {session.title}
+                    </Text>
+                  }
+                  description={
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {new Date(session.updatedAt).toLocaleString()}
+                    </Text>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </div>
+      )}
+
       {/* 消息区域 */}
       <div style={{ 
         flex: 1, 

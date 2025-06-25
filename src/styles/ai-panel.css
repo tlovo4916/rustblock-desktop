@@ -176,6 +176,41 @@
   margin-top: 4px;
 }
 
+/* 历史对话列表样式 */
+.ant-list-item-meta-title {
+  margin-bottom: 4px !important;
+}
+
+.ant-list-item-action {
+  margin-left: 8px !important;
+}
+
+.ant-list-item:hover {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark-mode .ant-list-item:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* 历史对话列表滚动条 */
+.ant-list {
+  scrollbar-width: thin;
+}
+
+.ant-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark-mode .ant-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* 优化滚动条样式 */
 .ant-layout-sider::-webkit-scrollbar {
   width: 6px;
