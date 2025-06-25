@@ -1,0 +1,122 @@
+/* AI助手面板动画样式 */
+.ant-layout-sider {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 白天模式下的AI面板样式 */
+.ant-layout-sider-light {
+  background: #fff !important;
+}
+
+.ant-layout-sider-light .ant-input {
+  background-color: #fff !important;
+  border-color: #d9d9d9 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-layout-sider-light .ant-btn {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 暗黑模式下的AI面板样式 */
+.ant-layout-sider-dark {
+  background: #141414 !important;
+}
+
+.ant-layout-sider-dark .ant-input {
+  background-color: #1f1f1f !important;
+  border-color: #434343 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-layout-sider-dark .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.ant-layout-sider-dark .ant-input:hover {
+  border-color: #595959 !important;
+}
+
+.ant-layout-sider-dark .ant-input:focus {
+  border-color: #177ddc !important;
+  box-shadow: 0 0 0 2px rgba(23, 125, 220, 0.2) !important;
+}
+
+.ant-layout-sider-dark .ant-input-disabled {
+  background-color: #262626 !important;
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.ant-layout-sider-dark .ant-btn {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-layout-sider-dark .ant-btn-text:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ant-layout-sider-dark .ant-empty-description {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* 顶部AI助手按钮样式修复 */
+.ai-assistant-toggle-btn.ant-btn-default:hover {
+  color: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+.dark-mode .ai-assistant-toggle-btn.ant-btn-default:hover {
+  background: #303030 !important;
+  color: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+/* 快速提问按钮样式 */
+.ant-layout-sider-light .ant-btn-default {
+  background: #fff !important;
+  border-color: #d9d9d9 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-layout-sider-light .ant-btn-default:hover {
+  color: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+.ant-layout-sider-dark .ant-btn-default {
+  background: #262626 !important;
+  border-color: #434343 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-layout-sider-dark .ant-btn-default:hover {
+  color: #40a9ff !important;
+  border-color: #40a9ff !important;
+  background: #303030 !important;
+}
+
+/* 优化滚动条样式 */
+.ant-layout-sider::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .ant-layout-sider::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .ant-layout-sider::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

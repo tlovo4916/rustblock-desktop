@@ -1,15 +1,17 @@
-import React, { useState, lazy, Suspense } from "react";
-import { Layout, Menu, Button, Spin } from "antd";
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { Layout, Menu, Button, Spin, Drawer, Tooltip } from "antd";
 import {
   HomeOutlined,
   CodeOutlined,
   ToolOutlined,
   SettingOutlined,
-  RobotOutlined,
   BugOutlined,
   TeamOutlined,
   FileTextOutlined,
+  MessageOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
+import AIIcon from "./components/AIIcon";
 import ThemeToggle from "./components/ThemeToggle";
 import LanguageToggle from "./components/LanguageToggle";
 import DarkModeStyles from "./components/DarkModeStyles";
@@ -20,6 +22,7 @@ import zhCN from "antd/locale/zh_CN";
 import enUS from "antd/locale/en_US";
 import "./styles.css";
 import "./styles/dark-override.css";
+import "./styles/ai-panel.css";
 
 // 懒加载页面组件以提升性能
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -27,7 +30,7 @@ const EditorPage = lazy(() => import("./pages/EditorPage"));
 const DebugPage = lazy(() => import("./pages/DebugPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DevicesPage = lazy(() => import("./pages/DevicesPage"));
-const AIPage = lazy(() => import("./pages/AIPage"));
+const AISidePanel = lazy(() => import("./components/AISidePanel"));
 
 const { Content, Sider, Header } = Layout;
 
@@ -46,9 +49,28 @@ const PageLoader = () => (
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [currentPage, setCurrentPage] = useState("home");
+  const [aiPanelVisible, setAiPanelVisible] = useState(false);
   const { isDarkMode } = useTheme();
   const { t } = useTranslation();
   const { locale } = useLocale();
+
+  // 键盘快捷键支持
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K 打开AI助手
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setAiPanelVisible(prev => !prev);
+      }
+      // Escape 关闭AI助手
+      if (e.key === 'Escape' && aiPanelVisible) {
+        setAiPanelVisible(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [aiPanelVisible]);
 
   const menuItems = [
     { 
@@ -70,11 +92,6 @@ const App: React.FC = () => {
       key: "devices", 
       icon: <TeamOutlined style={{ fontSize: 16 }} />, 
       label: t('menu.devices')
-    },
-    { 
-      key: "ai", 
-      icon: <RobotOutlined style={{ fontSize: 16 }} />, 
-      label: t('menu.ai')
     },
     { 
       key: "tools", 
@@ -106,8 +123,6 @@ const App: React.FC = () => {
               return <DebugPage />;
             case "devices":
               return <DevicesPage />;
-            case "ai":
-              return <AIPage />;
             case "settings":
               return <SettingsPage />;
             default:
@@ -163,25 +178,105 @@ const App: React.FC = () => {
           onClick={({ key }) => setCurrentPage(key)}
         />
       </Sider>
-      <Layout style={{ marginLeft: collapsed ? 80 : 200 }}>
+      <Layout 
+        style={{ 
+          marginLeft: collapsed ? 80 : 200,
+          marginRight: aiPanelVisible ? 400 : 0,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <Header
           style={{
             padding: '0 24px',
             background: 'transparent',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             height: 64,
           }}
         >
-          <LanguageToggle />
-          <div style={{ width: 16 }} />
-          <ThemeToggle />
+          <div />
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip 
+              title={`${t('menu.ai')} (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'} + K)`}
+            >
+              <Button
+                type={aiPanelVisible ? 'primary' : 'default'}
+                icon={<AIIcon />}
+                onClick={() => setAiPanelVisible(!aiPanelVisible)}
+                className="ai-assistant-toggle-btn"
+                style={{
+                  marginRight: 16,
+                  background: !aiPanelVisible && isDarkMode ? '#262626' : undefined,
+                  borderColor: !aiPanelVisible && isDarkMode ? '#434343' : undefined,
+                  color: !aiPanelVisible && isDarkMode ? 'rgba(255, 255, 255, 0.85)' : undefined,
+                }}
+              >
+                {t('menu.ai')}
+              </Button>
+            </Tooltip>
+            <LanguageToggle />
+            <div style={{ width: 16 }} />
+            <ThemeToggle />
+          </div>
         </Header>
         <Content style={{ margin: "0", overflow: "initial" }}>
           {renderContent()}
         </Content>
       </Layout>
+      {/* AI助手侧边栏 */}
+      <Sider
+        width={400}
+        theme={isDarkMode ? "dark" : "light"}
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          background: isDarkMode ? '#141414' : '#fff',
+          borderLeft: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
+          transform: aiPanelVisible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: aiPanelVisible ? '-4px 0 12px rgba(0,0,0,0.1)' : 'none',
+          zIndex: 10,
+        }}
+      >
+        <div style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div style={{
+            padding: '16px 24px',
+            borderBottom: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: isDarkMode ? '#1f1f1f' : '#fafafa',
+          }}>
+            <h3 style={{ margin: 0, fontSize: 18, color: isDarkMode ? '#fff' : undefined, display: 'flex', alignItems: 'center' }}>
+              <AIIcon style={{ marginRight: 8, fontSize: 20 }} />
+              {t('menu.ai')}
+            </h3>
+            <Tooltip title={`${t('common.close')} (Esc)`}>
+              <Button
+                type="text"
+                icon={<CloseOutlined />}
+                onClick={() => setAiPanelVisible(false)}
+                size="small"
+                style={{ color: isDarkMode ? '#fff' : undefined }}
+              />
+            </Tooltip>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <Suspense fallback={<div style={{ padding: 20, textAlign: 'center' }}><Spin /></div>}>
+              <AISidePanel />
+            </Suspense>
+          </div>
+        </div>
+      </Sider>
     </Layout>
     </ConfigProvider>
   );
