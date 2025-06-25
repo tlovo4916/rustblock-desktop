@@ -6,6 +6,10 @@ import { logger } from '../utils/logger';
 import { useTranslation } from '../contexts/LocaleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import AIIcon from './AIIcon';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const { TextArea } = Input;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -189,7 +193,73 @@ const AISidePanel: React.FC = () => {
                 wordBreak: 'break-word',
               }}
             >
-              <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+              <div className="markdown-content">
+                {msg.role === 'assistant' ? (
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: ({ node, inline, className, children, ...props }) => {
+                        return inline ? (
+                          <code 
+                            style={{
+                              background: isDarkMode ? '#262626' : '#f0f0f0',
+                              padding: '2px 4px',
+                              borderRadius: 3,
+                              fontSize: '0.9em',
+                              fontFamily: 'Consolas, Monaco, monospace',
+                            }}
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        ) : (
+                          <pre
+                            style={{
+                              background: isDarkMode ? '#262626' : '#f5f5f5',
+                              padding: '12px',
+                              borderRadius: 6,
+                              overflowX: 'auto',
+                              margin: '8px 0',
+                            }}
+                          >
+                            <code
+                              style={{
+                                fontFamily: 'Consolas, Monaco, monospace',
+                                fontSize: '0.9em',
+                              }}
+                              className={className}
+                              {...props}
+                            >
+                              {children}
+                            </code>
+                          </pre>
+                        );
+                      },
+                      a: ({ node, ...props }) => (
+                        <a 
+                          style={{ color: '#1890ff', textDecoration: 'underline' }}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          {...props}
+                        />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul style={{ paddingLeft: 20, margin: '8px 0' }} {...props} />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol style={{ paddingLeft: 20, margin: '8px 0' }} {...props} />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p style={{ margin: '8px 0' }} {...props} />
+                      ),
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                ) : (
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                )}
+              </div>
               <div
                 style={{
                   fontSize: 10,
@@ -221,8 +291,51 @@ const AISidePanel: React.FC = () => {
                 wordBreak: 'break-word',
               }}
             >
-              <div style={{ whiteSpace: 'pre-wrap' }}>
-                {typingContent}
+              <div className="markdown-content">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code: ({ node, inline, className, children, ...props }) => {
+                      return inline ? (
+                        <code 
+                          style={{
+                            background: isDarkMode ? '#262626' : '#f0f0f0',
+                            padding: '2px 4px',
+                            borderRadius: 3,
+                            fontSize: '0.9em',
+                            fontFamily: 'Consolas, Monaco, monospace',
+                          }}
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      ) : (
+                        <pre
+                          style={{
+                            background: isDarkMode ? '#262626' : '#f5f5f5',
+                            padding: '12px',
+                            borderRadius: 6,
+                            overflowX: 'auto',
+                            margin: '8px 0',
+                          }}
+                        >
+                          <code
+                            style={{
+                              fontFamily: 'Consolas, Monaco, monospace',
+                              fontSize: '0.9em',
+                            }}
+                            className={className}
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        </pre>
+                      );
+                    },
+                  }}
+                >
+                  {typingContent}
+                </ReactMarkdown>
                 <span style={{ opacity: 0.5 }}>|</span>
               </div>
             </div>
@@ -275,15 +388,22 @@ const AISidePanel: React.FC = () => {
         borderTop: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
         background: isDarkMode ? '#1f1f1f' : '#f5f5f5',
       }}>
-        <Input.Group compact style={{ display: 'flex' }}>
-          <Input
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <TextArea
             placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            onPressEnter={sendMessage}
+            onPressEnter={(e) => {
+              if (!e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
             disabled={!apiKey || loading}
+            autoSize={{ minRows: 1, maxRows: 6 }}
             style={{ 
               flex: 1,
+              resize: 'none',
             }}
           />
           <Button
@@ -292,8 +412,9 @@ const AISidePanel: React.FC = () => {
             onClick={sendMessage}
             disabled={!apiKey || loading}
             loading={loading}
+            style={{ marginBottom: 0 }}
           />
-        </Input.Group>
+        </div>
       </div>
     </div>
   );

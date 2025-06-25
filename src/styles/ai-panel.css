@@ -14,8 +14,20 @@
   color: rgba(0, 0, 0, 0.85) !important;
 }
 
+.ant-layout-sider-light .ant-input::placeholder {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
 .ant-layout-sider-light .ant-btn {
   color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-layout-sider-light .ant-btn-primary {
+  color: #fff !important;
+}
+
+.ant-layout-sider-light .ant-empty-normal {
+  color: rgba(0, 0, 0, 0.25) !important;
 }
 
 /* 暗黑模式下的AI面板样式 */
@@ -93,6 +105,75 @@
   color: #40a9ff !important;
   border-color: #40a9ff !important;
   background: #303030 !important;
+}
+
+/* Markdown内容样式 */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 12px 0 8px 0;
+  font-weight: 600;
+}
+
+.markdown-content h1 { font-size: 1.5em; }
+.markdown-content h2 { font-size: 1.3em; }
+.markdown-content h3 { font-size: 1.1em; }
+
+.markdown-content blockquote {
+  border-left: 4px solid #d9d9d9;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #666;
+}
+
+.dark-mode .markdown-content blockquote {
+  border-left-color: #434343;
+  color: #999;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid #e8e8e8;
+  margin: 16px 0;
+}
+
+.dark-mode .markdown-content hr {
+  border-top-color: #434343;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  border: 1px solid #e8e8e8;
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.dark-mode .markdown-content table th,
+.dark-mode .markdown-content table td {
+  border-color: #434343;
+}
+
+.markdown-content table th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.dark-mode .markdown-content table th {
+  background: #262626;
+}
+
+/* TextArea样式优化 */
+.ant-input-textarea-allow-clear .ant-input-clear-icon {
+  margin-top: 4px;
 }
 
 /* 优化滚动条样式 */

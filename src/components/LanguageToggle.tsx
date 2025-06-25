@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Select } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { useLocale } from '../contexts/LocaleContext';
@@ -16,13 +16,19 @@ const LanguageToggle: React.FC = () => {
     { value: 'en-US', label: 'English', flag: '🇺🇸' },
   ];
 
+  // 计算最适合的宽度
+  const optimalWidth = useMemo(() => {
+    // 中文需要更多空间，英文相对较少
+    return locale === 'zh-CN' ? 135 : 120;
+  }, [locale]);
+
   return (
     <Select
       value={locale}
       onChange={setLocale}
-      style={{ width: 120 }}
+      style={{ width: optimalWidth, transition: 'width 0.2s ease' }}
       suffixIcon={<GlobalOutlined />}
-      dropdownStyle={{ minWidth: 140 }}
+      dropdownStyle={{ minWidth: 135 }}
       className={isDarkMode ? 'dark-select' : 'light-select'}
     >
       {languages.map((lang) => (

@@ -142,7 +142,7 @@ export const enUS = {
     error: 'An error occurred',
     noApiKey: 'Please configure DeepSeek API key in settings first',
     configureNow: 'Configure Now',
-    welcomeMessage: 'Hello! I am Xiao Pai! Your AI helper on the programming journey. Is there anything I can help you with?',
+    welcomeMessage: 'Hello! I am paipai! Your AI helper on the programming journey. Is there anything I can help you with?',
     connectingAI: 'Connecting to AI...',
     systemPrompt: 'You are a programming assistant, answer concisely, use emojis.',
     sendFailed: 'Send failed',

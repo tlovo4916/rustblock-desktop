@@ -239,7 +239,7 @@ const App: React.FC = () => {
           borderLeft: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
           transform: aiPanelVisible ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: aiPanelVisible ? '-4px 0 12px rgba(0,0,0,0.1)' : 'none',
+          boxShadow: aiPanelVisible ? isDarkMode ? '-4px 0 12px rgba(0,0,0,0.3)' : '-4px 0 16px rgba(0,0,0,0.08)' : 'none',
           zIndex: 10,
         }}
       >
@@ -254,10 +254,10 @@ const App: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: isDarkMode ? '#1f1f1f' : '#fafafa',
+            background: isDarkMode ? '#1f1f1f' : '#f0f0f0',
           }}>
-            <h3 style={{ margin: 0, fontSize: 18, color: isDarkMode ? '#fff' : undefined, display: 'flex', alignItems: 'center' }}>
-              <AIIcon style={{ marginRight: 8, fontSize: 20 }} />
+            <h3 style={{ margin: 0, fontSize: 18, color: isDarkMode ? '#fff' : 'rgba(0, 0, 0, 0.85)', display: 'flex', alignItems: 'center' }}>
+              <AIIcon style={{ marginRight: 8, fontSize: 20, color: isDarkMode ? '#fff' : '#1890ff' }} />
               {t('menu.ai')}
             </h3>
             <Tooltip title={`${t('common.close')} (Esc)`}>
@@ -266,7 +266,7 @@ const App: React.FC = () => {
                 icon={<CloseOutlined />}
                 onClick={() => setAiPanelVisible(false)}
                 size="small"
-                style={{ color: isDarkMode ? '#fff' : undefined }}
+                style={{ color: isDarkMode ? '#fff' : 'rgba(0, 0, 0, 0.65)' }}
               />
             </Tooltip>
           </div>
