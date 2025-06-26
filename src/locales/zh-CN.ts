@@ -108,6 +108,13 @@ export const zhCN = {
     errorDeviceNotFound: '设备未找到：设备可能已断开连接，请检查USB连接',
     errorTimeout: '连接超时：设备无响应，请检查设备状态和连接',
   },
+
+  // 设备状态
+  device: {
+    hardwareDevice: '硬件设备',
+    connectedDevices: '已连接 {count} 个设备',
+    noConnection: '未连接设备',
+  },
   
   // 编辑器
   editor: {
@@ -140,14 +147,14 @@ export const zhCN = {
     send: '发送',
     thinking: '思考中...',
     error: '发生错误',
-    noApiKey: '请先在设置中配置 DeepSeek API 密钥',
+    noApiKey: '请先在设置中配置 API 密钥',
     configureNow: '现在配置',
     welcomeMessage: '哈喽哇,我是小派! 是你学习编程路上的AI小帮手,有什么问题需要我帮忙吗？',
     connectingAI: '正在连接AI...',
     systemPrompt: '你是编程助手，简洁回答，多用emoji。',
     sendFailed: '发送失败',
     chatWithAI: '与AI助手对话',
-    configureApiKey: '请先在设置页面配置DeepSeek API密钥才能使用AI对话功能',
+    configureApiKey: '请先在设置页面配置 API 密钥才能使用AI对话功能',
     assistantName: '小派',
     aiAssistant: 'AI助手',
     askQuestion: '给小派提问题吧~',
@@ -178,8 +185,9 @@ export const zhCN = {
     general: '通用设置',
     performance: '性能监控',
     aiConfig: '🤖 AI助手配置',
-    apiKey: 'DeepSeek API密钥',
-    apiKeyPlaceholder: '输入你的DeepSeek API密钥...',
+    aiModel: 'AI 模型',
+    apiKey: 'API 密钥',
+    apiKeyPlaceholder: '输入你的 API 密钥...',
     apiUrl: 'API服务地址',
     save: '保存配置',
     saving: '保存中...',

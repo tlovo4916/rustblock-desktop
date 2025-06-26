@@ -30,6 +30,8 @@ const AIPage: React.FC = () => {
   const [loadingStatus, setLoadingStatus] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
+  const [selectedModel, setSelectedModel] = useState('deepseek-chat');
+  const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
   const [typingContent, setTypingContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,22 +40,39 @@ const AIPage: React.FC = () => {
   // 加载API配置
   useEffect(() => {
     const loadConfig = () => {
-      const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
-      const savedApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
-      setApiKey(savedApiKey);
+      const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
+      const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
+      
+      // 加载所有提供商的API密钥
+      const keys: Record<string, string> = {
+        deepseek: localStorage.getItem('deepseek_api_key') || '',
+        openai: localStorage.getItem('openai_api_key') || '',
+      };
+      setProviderKeys(keys);
+      
+      // 根据当前模型设置对应的API密钥
+      const provider = savedApiUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      setApiKey(keys[provider] || '');
       setApiUrl(savedApiUrl);
+      setSelectedModel(savedModel);
     };
 
     loadConfig();
 
     // 监听配置更新事件
     const handleConfigUpdate = (event: any) => {
-      const { apiKey, apiUrl } = event.detail;
-      setApiKey(apiKey);
-      setApiUrl(apiUrl);
+      if (event.detail) {
+        setApiKey(event.detail.apiKey || '');
+        setApiUrl(event.detail.apiUrl || '');
+        setSelectedModel(event.detail.model || 'deepseek-chat');
+        if (event.detail.providerKeys) {
+          setProviderKeys(event.detail.providerKeys);
+        }
+      }
     };
 
     window.addEventListener('ai-config-updated', handleConfigUpdate);
+
     return () => {
       window.removeEventListener('ai-config-updated', handleConfigUpdate);
       // 清理打字效果定时器
@@ -122,9 +141,10 @@ const AIPage: React.FC = () => {
 
       // 通过Tauri后端调用API
       setLoadingStatus(t('ai.thinking'));
-      const response = await safeInvoke<string>('chat_with_deepseek', {
+      const response = await safeInvoke<string>('chat_with_ai_generic', {
         apiKey,
         apiUrl,
+        model: selectedModel,
         messages: chatMessages,
       });
 

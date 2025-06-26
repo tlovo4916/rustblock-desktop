@@ -1,0 +1,17 @@
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.status-dot.blinking {
+  animation: blink 1.5s infinite;
+}
+
+.device-status-indicator:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .device-status-indicator:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}

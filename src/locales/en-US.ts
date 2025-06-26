@@ -108,6 +108,13 @@ export const enUS = {
     errorDeviceNotFound: 'Device not found: Device may be disconnected, please check USB connection',
     errorTimeout: 'Connection timeout: Device not responding, please check device status and connection',
   },
+
+  // Device Status
+  device: {
+    hardwareDevice: 'Hardware Device',
+    connectedDevices: '{count} device(s) connected',
+    noConnection: 'No device connected',
+  },
   
   // Editor
   editor: {
@@ -140,14 +147,14 @@ export const enUS = {
     send: 'Send',
     thinking: 'Thinking...',
     error: 'An error occurred',
-    noApiKey: 'Please configure DeepSeek API key in settings first',
+    noApiKey: 'Please configure API key in settings first',
     configureNow: 'Configure Now',
     welcomeMessage: 'Hello! I am paipai! Your AI helper on the programming journey. Is there anything I can help you with?',
     connectingAI: 'Connecting to AI...',
     systemPrompt: 'You are a programming assistant, answer concisely, use emojis.',
     sendFailed: 'Send failed',
     chatWithAI: 'Chat with AI Assistant',
-    configureApiKey: 'Please configure DeepSeek API key in settings to use AI chat',
+    configureApiKey: 'Please configure API key in settings to use AI chat',
     assistantName: 'Xiao Pai',
     aiAssistant: 'AI Assistant',
     askQuestion: 'Ask Paipai a question~',
@@ -178,8 +185,9 @@ export const enUS = {
     general: 'General Settings',
     performance: 'Performance Monitor',
     aiConfig: '🤖 AI Assistant Configuration',
-    apiKey: 'DeepSeek API Key',
-    apiKeyPlaceholder: 'Enter your DeepSeek API key...',
+    aiModel: 'AI Model',
+    apiKey: 'API Key',
+    apiKeyPlaceholder: 'Enter your API key...',
     apiUrl: 'API Service URL',
     save: 'Save Configuration',
     saving: 'Saving...',

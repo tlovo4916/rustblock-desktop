@@ -70,14 +70,14 @@ pub async fn configure_ai_service(
 }
 
 // DeepSeek专用命令
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeepSeekMessage {
     pub role: String,
     pub content: String,
 }
 
 use futures_util::StreamExt;
-use tauri::{Manager, Emitter};
+use tauri::Emitter;
 
 #[derive(Clone, Serialize)]
 struct StreamEvent {
@@ -91,21 +91,42 @@ pub async fn chat_with_deepseek(
     api_url: String,
     messages: Vec<DeepSeekMessage>,
 ) -> Result<String, String> {
+    chat_with_ai_generic(api_key, api_url, "deepseek-chat".to_string(), messages).await
+}
+
+// 通用的AI聊天接口
+#[tauri::command]
+pub async fn chat_with_ai_generic(
+    api_key: String,
+    api_url: String,
+    model: String,
+    messages: Vec<DeepSeekMessage>,
+) -> Result<String, String> {
     use log::info;
-    info!("调用DeepSeek API...");
+    info!("调用AI API (模型: {})...", model);
     
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))  // 30秒超时
         .build()
         .map_err(|e| format!("创建HTTP客户端失败: {}", e))?;
     
+    // 根据模型调整参数
+    let (temperature, max_tokens, top_p) = match model.as_str() {
+        "deepseek-reasoner" => (0.5, 4096, 0.95),  // 深度思考模型，需要更大的上下文
+        "gpt-4o" => (0.7, 4096, 0.95),  // GPT-4o 支持长上下文
+        "gpt-4o-mini" => (0.7, 1000, 0.9),  // 简单任务
+        "deepseek-chat" => (0.3, 1000, 0.9),  // 简单任务
+        _ => (0.5, 1000, 0.9),  // 默认值
+    };
+    
+    // OpenAI兼容的API
     let request_body = serde_json::json!({
-        "model": "deepseek-chat",
+        "model": model,
         "messages": messages,
-        "temperature": 0.3,  // 降低temperature加快响应
-        "max_tokens": 300,   // 减少最大token数加快响应
-        "top_p": 0.9,        // 添加top_p参数优化质量
-        "frequency_penalty": 0.1,  // 减少重复
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "top_p": top_p,
+        "frequency_penalty": 0.1,
     });
     
     let response = client
@@ -144,16 +165,54 @@ pub async fn chat_with_deepseek_stream(
     messages: Vec<DeepSeekMessage>,
     event_name: String,
 ) -> Result<(), String> {
+    chat_with_ai_stream_generic(window, api_key, api_url, "deepseek-chat".to_string(), messages, event_name).await
+}
+
+// 通用的AI流式聊天接口
+#[tauri::command]
+pub async fn chat_with_ai_stream_generic(
+    window: tauri::Window,
+    api_key: String,
+    api_url: String,
+    model: String,
+    messages: Vec<DeepSeekMessage>,
+    event_name: String,
+) -> Result<(), String> {
     use log::info;
-    info!("调用DeepSeek API (流式)...");
+    info!("调用AI API (流式, 模型: {})...", model);
     
     let client = reqwest::Client::new();
     
+    // 注意：o1系列模型不支持流式响应
+    if model.starts_with("o1-") {
+        // 使用非流式API并模拟流式效果
+        let result = chat_with_ai_generic(api_key, api_url, model, messages).await?;
+        window.emit(&event_name, StreamEvent {
+            chunk: result,
+            finished: false,
+        }).map_err(|e| format!("发送事件失败: {}", e))?;
+        window.emit(&event_name, StreamEvent {
+            chunk: String::new(),
+            finished: true,
+        }).map_err(|e| format!("发送事件失败: {}", e))?;
+        return Ok(());
+    }
+    
+    // 根据模型调整参数（与非流式保持一致）
+    let (temperature, max_tokens, top_p) = match model.as_str() {
+        "deepseek-reasoner" => (0.5, 4096, 0.95),  // 深度思考模型，需要更大的上下文
+        "gpt-4o" => (0.7, 4096, 0.95),  // GPT-4o 支持长上下文
+        "gpt-4o-mini" => (0.7, 1000, 0.9),  // 简单任务
+        "deepseek-chat" => (0.3, 1000, 0.9),  // 简单任务
+        _ => (0.5, 1000, 0.9),  // 默认值
+    };
+    
     let request_body = serde_json::json!({
-        "model": "deepseek-chat",
+        "model": model,
         "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 1000,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "top_p": top_p,
         "stream": true,  // 启用流式响应
     });
     
@@ -226,8 +285,18 @@ pub async fn test_deepseek_connection(
     api_key: String,
     api_url: String,
 ) -> Result<bool, String> {
+    test_ai_connection(api_key, api_url, "deepseek-chat".to_string()).await
+}
+
+// 通用的AI连接测试
+#[tauri::command]
+pub async fn test_ai_connection(
+    api_key: String,
+    api_url: String,
+    model: String,
+) -> Result<bool, String> {
     use log::info;
-    info!("测试DeepSeek API连接...");
+    info!("测试AI API连接 (模型: {})...", model);
     
     let client = reqwest::Client::new();
     
@@ -243,12 +312,13 @@ pub async fn test_deepseek_connection(
     ];
     
     let request_body = serde_json::json!({
-        "model": "deepseek-chat",
+        "model": model,
         "messages": test_messages,
         "temperature": 0.7,
         "max_tokens": 10,
     });
     
+    // OpenAI兼容的API (OpenAI, DeepSeek等)
     let response = client
         .post(format!("{}/v1/chat/completions", api_url))
         .header("Authorization", format!("Bearer {}", api_key))

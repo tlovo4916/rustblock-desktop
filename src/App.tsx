@@ -17,6 +17,8 @@ import LanguageToggle from "./components/LanguageToggle";
 import DarkModeStyles from "./components/DarkModeStyles";
 import { useTheme } from "./contexts/ThemeContext";
 import { useTranslation, useLocale } from "./contexts/LocaleContext";
+import { DeviceProvider } from "./contexts/DeviceContext";
+import { DeviceStatusIndicator } from "./components/DeviceStatusIndicator";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import enUS from "antd/locale/en_US";
@@ -135,8 +137,9 @@ const App: React.FC = () => {
 
   return (
     <ConfigProvider locale={locale === 'zh-CN' ? zhCN : enUS}>
-      <Layout style={{ minHeight: "100vh" }}>
-        <DarkModeStyles />
+      <DeviceProvider>
+        <Layout style={{ minHeight: "100vh" }}>
+          <DarkModeStyles />
       <Sider
         collapsible
         collapsed={collapsed}
@@ -195,7 +198,11 @@ const App: React.FC = () => {
             height: 64,
           }}
         >
-          <div />
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <DeviceStatusIndicator 
+              onClick={() => setCurrentPage('devices')}
+            />
+          </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Tooltip 
               title={`${t('menu.ai')} (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'} + K)`}
@@ -278,6 +285,7 @@ const App: React.FC = () => {
         </div>
       </Sider>
     </Layout>
+    </DeviceProvider>
     </ConfigProvider>
   );
 };

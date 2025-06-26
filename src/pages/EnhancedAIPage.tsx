@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { safeInvoke } from '../utils/tauri';
+import { useTranslation } from '../contexts/LocaleContext';
 import {
   Card,
   Tabs,
@@ -100,6 +101,7 @@ interface LearningPath {
 }
 
 const EnhancedAIPage: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('optimizer');
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -122,6 +124,8 @@ const EnhancedAIPage: React.FC = () => {
   // AI配置状态 - 使用统一配置
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
+  const [selectedModel, setSelectedModel] = useState('deepseek-chat');
+  const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadAgeAppropriateTemplates();
@@ -130,21 +134,38 @@ const EnhancedAIPage: React.FC = () => {
   // 加载统一的API配置
   useEffect(() => {
     const loadConfig = () => {
-      const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
-      const savedApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
-      setApiKey(savedApiKey);
+      const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
+      const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
+      
+      // 加载所有提供商的API密钥
+      const keys: Record<string, string> = {
+        deepseek: localStorage.getItem('deepseek_api_key') || '',
+        openai: localStorage.getItem('openai_api_key') || '',
+      };
+      setProviderKeys(keys);
+      
+      // 根据当前模型设置对应的API密钥
+      const provider = savedApiUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      setApiKey(keys[provider] || '');
       setApiUrl(savedApiUrl);
-      setIsConfigured(!!savedApiKey);
+      setSelectedModel(savedModel);
+      setIsConfigured(!!keys[provider]);
     };
 
     loadConfig();
 
     // 监听配置更新事件
     const handleConfigUpdate = (event: any) => {
-      const { apiKey, apiUrl } = event.detail;
-      setApiKey(apiKey);
-      setApiUrl(apiUrl);
-      setIsConfigured(!!apiKey);
+      if (event.detail) {
+        const { apiKey, apiUrl, model, providerKeys } = event.detail;
+        setApiKey(apiKey || '');
+        setApiUrl(apiUrl || '');
+        setSelectedModel(model || 'deepseek-chat');
+        setIsConfigured(!!apiKey);
+        if (providerKeys) {
+          setProviderKeys(providerKeys);
+        }
+      }
     };
 
     window.addEventListener('ai-config-updated', handleConfigUpdate);
@@ -160,7 +181,7 @@ const EnhancedAIPage: React.FC = () => {
     }
 
     if (!apiKey) {
-      message.error('请先在设置页面配置DeepSeek API密钥');
+      message.error(t('ai.noApiKey'));
       return;
     }
 
@@ -178,9 +199,10 @@ const EnhancedAIPage: React.FC = () => {
         },
       ];
 
-      const response = await safeInvoke<string>('chat_with_deepseek', {
+      const response = await safeInvoke<string>('chat_with_ai_generic', {
         apiKey,
         apiUrl,
+        model: selectedModel,
         messages,
       });
 
@@ -204,7 +226,7 @@ const EnhancedAIPage: React.FC = () => {
 
   const generateLearningPath = async () => {
     if (!apiKey) {
-      message.error('请先在设置页面配置DeepSeek API密钥');
+      message.error(t('ai.noApiKey'));
       return;
     }
 
@@ -222,9 +244,10 @@ const EnhancedAIPage: React.FC = () => {
         },
       ];
 
-      const response = await safeInvoke<string>('chat_with_deepseek', {
+      const response = await safeInvoke<string>('chat_with_ai_generic', {
         apiKey,
         apiUrl,
+        model: selectedModel,
         messages,
       });
 

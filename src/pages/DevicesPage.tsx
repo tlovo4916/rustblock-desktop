@@ -4,6 +4,7 @@ import { Modal, Tabs } from 'antd';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
+import { useDevice } from '../contexts/DeviceContext';
 // import SerialMonitor from '../components/SerialMonitor';
 // import DeviceConfiguration from '../components/DeviceConfiguration';
 
@@ -39,6 +40,7 @@ interface DeviceStatus {
 
 const DevicesPage: React.FC = () => {
   const { t } = useTranslation();
+  const { connectDevice: contextConnectDevice, disconnectDevice: contextDisconnectDevice, isDeviceConnected: contextIsDeviceConnected } = useDevice();
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [deviceStatuses, setDeviceStatuses] = useState<Map<string, DeviceStatus>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -83,8 +85,7 @@ const DevicesPage: React.FC = () => {
       }
       setDeviceStatuses(statusMap);
 
-      // 更新已连接端口列表
-      await updateConnectedPorts();
+      // 已连接的端口列表由全局上下文管理
 
       if (uniqueDevices.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');
@@ -123,16 +124,10 @@ const DevicesPage: React.FC = () => {
         throw new Error(`端口 ${device.port} 正在被其他程序使用，请关闭相关程序后重试`);
       }
 
-      // 连接串口
-      await invoke('connect_serial', {
-        port: device.port,
-        baudRate: baudRate,
-      });
+      // 使用全局上下文连接设备
+      await contextConnectDevice(device.port, baudRate);
 
       logger.info('设备连接成功');
-
-      // 更新已连接端口列表
-      await updateConnectedPorts();
 
       // 重新获取设备状态
       await refreshDeviceStatus(deviceId);
@@ -160,12 +155,9 @@ const DevicesPage: React.FC = () => {
         throw new Error('设备未找到');
       }
 
-      // 断开串口连接
-      await invoke('disconnect_serial', { port: device.port });
+      // 使用全局上下文断开设备
+      await contextDisconnectDevice(device.port);
       logger.info('设备断开连接');
-
-      // 更新已连接端口列表
-      await updateConnectedPorts();
 
       await refreshDeviceStatus(deviceId);
     } catch (err) {
@@ -189,17 +181,9 @@ const DevicesPage: React.FC = () => {
     }
   };
 
-  const updateConnectedPorts = async () => {
-    try {
-      const ports = await invoke<string[]>('get_connected_ports');
-      setConnectedPorts(ports);
-    } catch (err) {
-      logger.warn('获取已连接端口列表失败:', err);
-    }
-  };
 
   const isDeviceConnected = (device: DeviceInfo): boolean => {
-    return connectedPorts.includes(device.port);
+    return contextIsDeviceConnected(device.port);
   };
 
   const installDriver = async (deviceId: string) => {
@@ -275,8 +259,7 @@ const DevicesPage: React.FC = () => {
       }
       setDeviceStatuses(statusMap);
 
-      // 重要：更新已连接端口列表，保持连接状态
-      await updateConnectedPorts();
+      // 已连接的端口列表由全局上下文管理
 
       if (uniqueDevices.length === 0) {
         setError('未检测到设备。请确保设备已正确连接并安装了相应的驱动程序。');

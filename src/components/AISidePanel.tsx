@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { message, Input, Button, Divider, Empty, Spin, Dropdown, Menu, Modal, List, Typography, Tooltip } from 'antd';
-import { SendOutlined, BulbOutlined, HistoryOutlined, PlusOutlined, DeleteOutlined, MoreOutlined, MessageOutlined } from '@ant-design/icons';
+import { message, Input, Button, Divider, Empty, Spin, Dropdown, Menu, Modal, List, Typography, Tooltip, Select } from 'antd';
+import { SendOutlined, BulbOutlined, HistoryOutlined, PlusOutlined, DeleteOutlined, MoreOutlined, MessageOutlined, RobotOutlined } from '@ant-design/icons';
 import { safeInvoke } from '../utils/tauri';
 import { logger } from '../utils/logger';
 import { useTranslation } from '../contexts/LocaleContext';
@@ -41,11 +41,21 @@ const AISidePanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
+  const [selectedModel, setSelectedModel] = useState('deepseek-chat');
+  const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
   const [typingContent, setTypingContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 支持的模型列表
+  const supportedModels = [
+    { value: 'deepseek-chat', name: 'DeepSeek Chat (V3)', baseUrl: 'https://api.deepseek.com' },
+    { value: 'deepseek-reasoner', name: 'DeepSeek Reasoner (R1)', baseUrl: 'https://api.deepseek.com' },
+    { value: 'gpt-4o', name: 'GPT-4o', baseUrl: 'https://api.openai.com' },
+    { value: 'gpt-4o-mini', name: 'GPT-4o Mini', baseUrl: 'https://api.openai.com' },
+  ];
 
   // 创建新会话
   const createNewSession = () => {
@@ -88,10 +98,21 @@ const AISidePanel: React.FC = () => {
   // 加载API配置和历史会话
   useEffect(() => {
     const loadConfig = () => {
-      const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
-      const savedApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
-      setApiKey(savedApiKey);
+      const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
+      const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
+      
+      // 加载所有提供商的API密钥
+      const keys: Record<string, string> = {
+        deepseek: localStorage.getItem('deepseek_api_key') || '',
+        openai: localStorage.getItem('openai_api_key') || '',
+      };
+      setProviderKeys(keys);
+      
+      // 根据当前模型设置对应的API密钥
+      const provider = savedApiUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      setApiKey(keys[provider] || '');
       setApiUrl(savedApiUrl);
+      setSelectedModel(savedModel);
     };
 
     const loadSessions = () => {
@@ -136,9 +157,15 @@ const AISidePanel: React.FC = () => {
 
     // 监听配置更新事件
     const handleConfigUpdate = (event: any) => {
-      const { apiKey, apiUrl } = event.detail;
-      setApiKey(apiKey);
-      setApiUrl(apiUrl);
+      if (event.detail) {
+        const { apiKey, apiUrl, model, providerKeys } = event.detail;
+        setApiKey(apiKey || '');
+        setApiUrl(apiUrl || '');
+        setSelectedModel(model || 'deepseek-chat');
+        if (providerKeys) {
+          setProviderKeys(providerKeys);
+        }
+      }
     };
 
     window.addEventListener('ai-config-updated', handleConfigUpdate);
@@ -289,9 +316,10 @@ const AISidePanel: React.FC = () => {
         { role: 'user', content: inputValue },
       ];
 
-      const response = await safeInvoke<string>('chat_with_deepseek', {
+      const response = await safeInvoke<string>('chat_with_ai_generic', {
         apiKey,
         apiUrl,
+        model: selectedModel,
         messages: chatMessages,
       });
 
@@ -668,6 +696,57 @@ const AISidePanel: React.FC = () => {
         borderTop: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
         background: isDarkMode ? '#1f1f1f' : '#f5f5f5',
       }}>
+        {/* 模型选择器 */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <RobotOutlined style={{ color: isDarkMode ? '#177ddc' : '#1890ff' }} />
+            <Select
+              value={selectedModel}
+              onChange={(value) => {
+                setSelectedModel(value);
+                localStorage.setItem('ai_model', value);
+                
+                // 根据模型更新API URL和密钥
+                const model = supportedModels.find(m => m.value === value);
+                if (model) {
+                  const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+                  setApiUrl(model.baseUrl);
+                  setApiKey(providerKeys[provider] || '');
+                  localStorage.setItem('ai_api_url', model.baseUrl);
+                }
+              }}
+              style={{ width: 200 }}
+              size="small"
+            >
+              {supportedModels.map(model => (
+                <Select.Option key={model.value} value={model.value}>
+                  {model.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+          
+          {/* 模型特点提示 */}
+          {(selectedModel === 'deepseek-reasoner' || selectedModel === 'gpt-4o') && (
+            <div style={{ 
+              fontSize: 11, 
+              color: isDarkMode ? '#faad14' : '#fa8c16',
+              marginLeft: 28,
+            }}>
+              💡 \u9002\u5408\u590d\u6742\u4efb\u52a1\uff0c\u652f\u6301\u957f\u4e0a\u4e0b\u6587\u548c\u6df1\u5ea6\u601d\u8003
+            </div>
+          )}
+          {(selectedModel === 'deepseek-chat' || selectedModel === 'gpt-4o-mini') && (
+            <div style={{ 
+              fontSize: 11, 
+              color: isDarkMode ? '#52c41a' : '#389e0d',
+              marginLeft: 28,
+            }}>
+              ⚡ \u9002\u5408\u7b80\u5355\u4efb\u52a1\uff0c\u54cd\u5e94\u901f\u5ea6\u5feb
+            </div>
+          )}
+        </div>
+        
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <TextArea
             placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}

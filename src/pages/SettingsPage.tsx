@@ -17,14 +17,52 @@ const SettingsPage: React.FC = () => {
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('deepseek-chat');
+  
+  // 存储每个提供商的API密钥
+  const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
+
+  // 支持的模型列表
+  const supportedModels = [
+    { value: 'deepseek-chat', name: 'DeepSeek Chat (V3)', baseUrl: 'https://api.deepseek.com' },
+    { value: 'deepseek-reasoner', name: 'DeepSeek Reasoner (R1)', baseUrl: 'https://api.deepseek.com' },
+    { value: 'gpt-4o', name: 'GPT-4o', baseUrl: 'https://api.openai.com' },
+    { value: 'gpt-4o-mini', name: 'GPT-4o Mini', baseUrl: 'https://api.openai.com' },
+  ];
 
   // 从localStorage加载配置
   useEffect(() => {
-    const savedApiKey = localStorage.getItem('deepseek_api_key') || '';
-    const savedApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
-    setApiKey(savedApiKey);
-    setApiUrl(savedApiUrl);
+    const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
+    
+    // 加载所有提供商的API密钥
+    const keys: Record<string, string> = {
+      deepseek: localStorage.getItem('deepseek_api_key') || '',
+      openai: localStorage.getItem('openai_api_key') || '',
+    };
+    setProviderKeys(keys);
+    
+    // 根据选择的模型设置对应的API密钥和URL
+    const model = supportedModels.find(m => m.value === savedModel);
+    if (model) {
+      const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      setApiKey(keys[provider] || '');
+      setApiUrl(model.baseUrl);
+    }
+    
+    setSelectedModel(savedModel);
   }, []);
+
+  // 当选择模型改变时，更新API URL和加载对应的API密钥
+  useEffect(() => {
+    const model = supportedModels.find(m => m.value === selectedModel);
+    if (model && model.baseUrl) {
+      setApiUrl(model.baseUrl);
+      
+      // 根据模型加载对应提供商的API密钥
+      const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      setApiKey(providerKeys[provider] || '');
+    }
+  }, [selectedModel, providerKeys]);
 
   // 保存AI配置
   const saveAIConfig = async () => {
@@ -35,14 +73,35 @@ const SettingsPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 保存到localStorage
-      localStorage.setItem('deepseek_api_key', apiKey);
-      localStorage.setItem('deepseek_api_url', apiUrl);
+      // 根据当前选择的模型确定提供商
+      const model = supportedModels.find(m => m.value === selectedModel);
+      const provider = model?.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+      
+      // 保存到对应提供商的存储键
+      localStorage.setItem(`${provider}_api_key`, apiKey);
+      
+      // 更新内存中的提供商密钥
+      setProviderKeys(prev => ({ ...prev, [provider]: apiKey }));
+      
+      // 保存当前选择的模型和URL
+      localStorage.setItem('ai_model', selectedModel);
+      localStorage.setItem('ai_api_url', apiUrl);
+      
+      // 保持向后兼容
+      if (provider === 'deepseek') {
+        localStorage.setItem('deepseek_api_url', apiUrl);
+      }
 
       // 触发一个自定义事件，让其他组件知道配置已更新
       window.dispatchEvent(
         new CustomEvent('ai-config-updated', {
-          detail: { apiKey, apiUrl },
+          detail: { 
+            apiKey, 
+            apiUrl, 
+            model: selectedModel,
+            provider,
+            providerKeys 
+          },
         })
       );
 
@@ -64,9 +123,10 @@ const SettingsPage: React.FC = () => {
 
     setTesting(true);
     try {
-      const isConnected = await safeInvoke<boolean>('test_deepseek_connection', {
+      const isConnected = await safeInvoke<boolean>('test_ai_connection', {
         apiKey,
         apiUrl,
+        model: selectedModel,
       });
 
       if (isConnected) {
@@ -93,6 +153,25 @@ const SettingsPage: React.FC = () => {
               <div style={{ marginBottom: 32 }}>
                 <h3>{t('settings.aiConfig')}</h3>
                 <div style={{ display: 'grid', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.aiModel')}:</label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: 8,
+                        border: '1px solid #d9d9d9',
+                        borderRadius: 4,
+                      }}
+                      value={selectedModel}
+                      onChange={e => setSelectedModel(e.target.value)}
+                    >
+                      {supportedModels.map(model => (
+                        <option key={model.value} value={model.value}>
+                          {model.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.apiKey')}:</label>
                     <input
