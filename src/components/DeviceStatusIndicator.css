@@ -4,8 +4,18 @@
   100% { opacity: 1; }
 }
 
+@keyframes breathe {
+  0% { opacity: 0.8; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; transform: scale(0.95); }
+}
+
 .status-dot.blinking {
   animation: blink 1.5s infinite;
+}
+
+.status-dot.breathing {
+  animation: breathe 2s ease-in-out infinite;
 }
 
 .device-status-indicator:hover {
@@ -14,4 +24,77 @@
 
 .dark .device-status-indicator:hover {
   background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 基础状态点样式 */
+.status-dot {
+  display: inline-block;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  position: relative;
+  overflow: visible;
+  /* 防止继承背景色 */
+  background-color: transparent !important;
+}
+
+/* 未连接状态 - 红点 */
+.status-dot.blinking {
+  background: #ff4d4f !important;
+  background-color: #ff4d4f !important;
+  box-shadow: 0 0 6px rgba(255, 77, 79, 0.6);
+}
+
+/* 连接状态 - 绿点 */
+.status-dot.breathing {
+  background: #52c41a !important;
+  background-color: #52c41a !important;
+  box-shadow: 0 0 6px rgba(82, 196, 26, 0.6);
+}
+
+/* 确保所有模式下颜色正确 */
+.status-dot.blinking,
+.status-dot.blinking::before,
+.status-dot.blinking::after {
+  background-color: #ff4d4f !important;
+}
+
+.status-dot.breathing,
+.status-dot.breathing::before,
+.status-dot.breathing::after {
+  background-color: #52c41a !important;
+}
+
+/* 黑夜模式下的特殊处理 */
+.dark .status-dot {
+  filter: brightness(1.2);
+  /* 确保基础状态点不继承背景色 */
+  background-color: transparent !important;
+}
+
+.dark .status-dot.blinking {
+  background: #ff6b6b !important;
+  background-color: #ff6b6b !important;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
+}
+
+.dark .status-dot.breathing {
+  background: #73d13d !important;
+  background-color: #73d13d !important;
+  box-shadow: 0 0 8px rgba(115, 209, 61, 0.8);
+}
+
+/* 强制覆盖任何继承的样式 */
+html.dark .status-dot.blinking,
+body.dark .status-dot.blinking,
+.dark .status-dot.blinking {
+  background: #ff6b6b !important;
+  background-color: #ff6b6b !important;
+}
+
+html.dark .status-dot.breathing,
+body.dark .status-dot.breathing,
+.dark .status-dot.breathing {
+  background: #73d13d !important;
+  background-color: #73d13d !important;
 }

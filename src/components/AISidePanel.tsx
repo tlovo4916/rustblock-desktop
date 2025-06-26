@@ -382,18 +382,52 @@ const AISidePanel: React.FC = () => {
             />
           </Tooltip>
         </div>
-        <Text 
-          style={{ 
-            fontSize: 12, 
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.45)',
-            maxWidth: 200,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {sessions.find(s => s.id === currentSessionId)?.title || t('ai.newChat')}
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* 模型选择器移到这里 */}
+          <Select
+            value={selectedModel}
+            onChange={(value) => {
+              setSelectedModel(value);
+              localStorage.setItem('ai_model', value);
+              
+              // 根据模型更新API URL和密钥
+              const model = supportedModels.find(m => m.value === value);
+              if (model) {
+                const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+                setApiUrl(model.baseUrl);
+                setApiKey(providerKeys[provider] || '');
+                localStorage.setItem('ai_api_url', model.baseUrl);
+              }
+            }}
+            style={{ 
+              width: 180,
+              background: isDarkMode ? '#262626' : '#f0f0f0',
+              borderRadius: 4,
+            }}
+            size="small"
+            dropdownStyle={{
+              background: isDarkMode ? '#262626' : '#fff',
+            }}
+          >
+            {supportedModels.map(model => (
+              <Select.Option key={model.value} value={model.value}>
+                <span style={{ fontSize: 12 }}>{model.name}</span>
+              </Select.Option>
+            ))}
+          </Select>
+          <Text 
+            style={{ 
+              fontSize: 12, 
+              color: isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.45)',
+              maxWidth: 120,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {sessions.find(s => s.id === currentSessionId)?.title || t('ai.newChat')}
+          </Text>
+        </div>
       </div>
 
       {/* 历史对话列表 */}
@@ -696,56 +730,25 @@ const AISidePanel: React.FC = () => {
         borderTop: `1px solid ${isDarkMode ? '#434343' : '#f0f0f0'}`,
         background: isDarkMode ? '#1f1f1f' : '#f5f5f5',
       }}>
-        {/* 模型选择器 */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <RobotOutlined style={{ color: isDarkMode ? '#177ddc' : '#1890ff' }} />
-            <Select
-              value={selectedModel}
-              onChange={(value) => {
-                setSelectedModel(value);
-                localStorage.setItem('ai_model', value);
-                
-                // 根据模型更新API URL和密钥
-                const model = supportedModels.find(m => m.value === value);
-                if (model) {
-                  const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
-                  setApiUrl(model.baseUrl);
-                  setApiKey(providerKeys[provider] || '');
-                  localStorage.setItem('ai_api_url', model.baseUrl);
-                }
-              }}
-              style={{ width: 200 }}
-              size="small"
-            >
-              {supportedModels.map(model => (
-                <Select.Option key={model.value} value={model.value}>
-                  {model.name}
-                </Select.Option>
-              ))}
-            </Select>
+        {/* 模型特点提示 */}
+        {(selectedModel === 'deepseek-reasoner' || selectedModel === 'gpt-4o') && (
+          <div style={{ 
+            fontSize: 11, 
+            color: isDarkMode ? '#faad14' : '#fa8c16',
+            marginBottom: 8,
+          }}>
+            💡 适合复杂任务，支持长上下文和深度思考
           </div>
-          
-          {/* 模型特点提示 */}
-          {(selectedModel === 'deepseek-reasoner' || selectedModel === 'gpt-4o') && (
-            <div style={{ 
-              fontSize: 11, 
-              color: isDarkMode ? '#faad14' : '#fa8c16',
-              marginLeft: 28,
-            }}>
-              💡 \u9002\u5408\u590d\u6742\u4efb\u52a1\uff0c\u652f\u6301\u957f\u4e0a\u4e0b\u6587\u548c\u6df1\u5ea6\u601d\u8003
-            </div>
-          )}
-          {(selectedModel === 'deepseek-chat' || selectedModel === 'gpt-4o-mini') && (
-            <div style={{ 
-              fontSize: 11, 
-              color: isDarkMode ? '#52c41a' : '#389e0d',
-              marginLeft: 28,
-            }}>
-              ⚡ \u9002\u5408\u7b80\u5355\u4efb\u52a1\uff0c\u54cd\u5e94\u901f\u5ea6\u5feb
-            </div>
-          )}
-        </div>
+        )}
+        {(selectedModel === 'deepseek-chat' || selectedModel === 'gpt-4o-mini') && (
+          <div style={{ 
+            fontSize: 11, 
+            color: isDarkMode ? '#52c41a' : '#389e0d',
+            marginBottom: 8,
+          }}>
+            ⚡ 适合简单任务，响应速度快
+          </div>
+        )}
         
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <TextArea

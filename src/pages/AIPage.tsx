@@ -4,6 +4,7 @@ import { safeInvoke } from '../utils/tauri';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,6 +19,7 @@ interface ChatMessage {
 
 const AIPage: React.FC = () => {
   const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -201,12 +203,12 @@ const AIPage: React.FC = () => {
             {!apiKey && (
               <div
                 style={{
-                  background: '#fff2e8',
-                  border: '1px solid #ffbb96',
+                  background: isDarkMode ? 'rgba(250, 173, 20, 0.1)' : '#fff2e8',
+                  border: `1px solid ${isDarkMode ? 'rgba(250, 173, 20, 0.3)' : '#ffbb96'}`,
                   borderRadius: 4,
                   padding: 12,
                   marginBottom: 12,
-                  color: '#d46b08',
+                  color: isDarkMode ? '#faad14' : '#d46b08',
                 }}
               >
                 ⚠️ {t('ai.configureApiKey')}
@@ -216,10 +218,10 @@ const AIPage: React.FC = () => {
             <div
               style={{
                 flex: 1,
-                border: '1px solid #d9d9d9',
+                border: `1px solid ${isDarkMode ? '#434343' : '#d9d9d9'}`,
                 borderRadius: 8,
                 padding: 16,
-                background: '#fafafa',
+                background: isDarkMode ? '#1f1f1f' : '#fafafa',
                 marginBottom: 16,
                 overflow: 'auto',
               }}
@@ -235,8 +237,12 @@ const AIPage: React.FC = () => {
                 >
                   <div
                     style={{
-                      background: msg.role === 'user' ? '#1890ff' : '#f0f0f0',
-                      color: msg.role === 'user' ? 'white' : 'black',
+                      background: msg.role === 'user' 
+                        ? '#1890ff' 
+                        : isDarkMode ? '#303030' : '#f0f0f0',
+                      color: msg.role === 'user' 
+                        ? 'white' 
+                        : isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'black',
                       padding: 12,
                       borderRadius: 8,
                       maxWidth: '80%',
@@ -267,8 +273,8 @@ const AIPage: React.FC = () => {
                 >
                   <div
                     style={{
-                      background: '#f0f0f0',
-                      color: 'black',
+                      background: isDarkMode ? '#303030' : '#f0f0f0',
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'black',
                       padding: 12,
                       borderRadius: 8,
                       maxWidth: '80%',
@@ -298,7 +304,7 @@ const AIPage: React.FC = () => {
                     style={{
                       width: 16,
                       height: 16,
-                      border: '2px solid #f3f3f3',
+                      border: `2px solid ${isDarkMode ? '#303030' : '#f3f3f3'}`,
                       borderTop: '2px solid #1890ff',
                       borderRadius: '50%',
                       animation: 'spin 1s linear infinite',
@@ -315,8 +321,10 @@ const AIPage: React.FC = () => {
                 style={{
                   flex: 1,
                   padding: 8,
-                  border: '1px solid #d9d9d9',
+                  border: `1px solid ${isDarkMode ? '#434343' : '#d9d9d9'}`,
                   borderRadius: 4,
+                  background: isDarkMode ? '#262626' : '#fff',
+                  color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
                 }}
                 placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}
                 value={inputValue}
@@ -356,12 +364,22 @@ const AIPage: React.FC = () => {
                 <button
                   key={question}
                   style={{
-                    background: '#f0f0f0',
-                    border: '1px solid #d9d9d9',
+                    background: isDarkMode ? '#262626' : '#f0f0f0',
+                    border: `1px solid ${isDarkMode ? '#434343' : '#d9d9d9'}`,
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
                     padding: '8px 12px',
                     borderRadius: 4,
                     cursor: apiKey ? 'pointer' : 'not-allowed',
                     textAlign: 'left',
+                    transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (apiKey) {
+                      e.currentTarget.style.background = isDarkMode ? '#303030' : '#e6e6e6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = isDarkMode ? '#262626' : '#f0f0f0';
                   }}
                   onClick={() => {
                     if (apiKey) {
@@ -379,9 +397,11 @@ const AIPage: React.FC = () => {
               style={{
                 marginTop: 24,
                 padding: 16,
-                background: '#e6f7ff',
+                background: isDarkMode ? 'rgba(24, 144, 255, 0.1)' : '#e6f7ff',
+                border: `1px solid ${isDarkMode ? 'rgba(24, 144, 255, 0.3)' : 'transparent'}`,
                 borderRadius: 8,
                 fontSize: 12,
+                color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
               }}
             >
               <strong>💡 {t('ai.tips')}:</strong>

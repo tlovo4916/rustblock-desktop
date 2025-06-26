@@ -42,12 +42,11 @@ export const DeviceStatusIndicator: React.FC<DeviceStatusIndicatorProps> = ({ on
       >
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <div
-            className={`status-dot ${!hasAnyConnection ? 'blinking' : ''}`}
+            className={`status-dot ${hasAnyConnection ? 'breathing' : 'blinking'}`}
             style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: hasAnyConnection ? '#52c41a' : '#ff4d4f',
+              backgroundColor: hasAnyConnection 
+                ? (isDarkMode ? '#73d13d' : '#52c41a')
+                : (isDarkMode ? '#ff6b6b' : '#ff4d4f'),
             }}
           />
         </div>

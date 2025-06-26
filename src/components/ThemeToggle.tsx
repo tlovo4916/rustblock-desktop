@@ -8,19 +8,28 @@ const ThemeToggle: React.FC = () => {
   const { isDarkMode } = useTheme();
 
   return (
-    <Space size="small" style={{ marginRight: 8 }}>
+    <div 
+      style={{ 
+        marginRight: 8,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+      }}
+    >
       <SunOutlined style={{ 
-        fontSize: 18, 
-        color: isDarkMode ? '#8c8c8c' : '#faad14',
-        transition: 'color 0.3s ease'
+        fontSize: 16, 
+        color: isDarkMode ? 'rgba(255, 255, 255, 0.45)' : '#faad14',
+        transition: 'all 0.3s ease',
+        opacity: isDarkMode ? 0.5 : 1,
       }} />
       <CustomSwitch />
       <MoonOutlined style={{ 
-        fontSize: 18, 
-        color: isDarkMode ? '#1890ff' : '#8c8c8c',
-        transition: 'color 0.3s ease'
+        fontSize: 16, 
+        color: isDarkMode ? '#bae7ff' : 'rgba(0, 0, 0, 0.45)',
+        transition: 'all 0.3s ease',
+        opacity: isDarkMode ? 1 : 0.5,
       }} />
-    </Space>
+    </div>
   );
 };
 

@@ -91,11 +91,6 @@ const App: React.FC = () => {
       label: t('menu.debug')
     },
     { 
-      key: "devices", 
-      icon: <DeviceBoardIcon style={{ fontSize: 16 }} />, 
-      label: t('menu.devices')
-    },
-    { 
       key: "tools", 
       icon: <ToolOutlined style={{ fontSize: 16 }} />, 
       label: t('menu.tools')

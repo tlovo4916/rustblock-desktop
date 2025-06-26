@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Card, Button, Modal, message } from 'antd';
-import { Settings, Wrench } from 'lucide-react';
+import { Tabs, Card, Button, Modal, message, Form, Input, Select, Divider, Space, Typography, Switch } from 'antd';
+import { SettingOutlined, KeyOutlined, ApiOutlined, RobotOutlined, SaveOutlined, ExperimentOutlined, ToolOutlined } from '@ant-design/icons';
 import { safeInvoke } from '../utils/tauri';
 import PerformanceMonitor from '../components/PerformanceMonitor';
 import ToolStatus from '../components/ToolStatus';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
   const [showToolStatus, setShowToolStatus] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiUrl, setApiUrl] = useState('https://api.deepseek.com');
@@ -155,80 +158,54 @@ const SettingsPage: React.FC = () => {
                 <div style={{ display: 'grid', gap: 16 }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.aiModel')}:</label>
-                    <select
-                      style={{
-                        width: '100%',
-                        padding: 8,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                      }}
+                    <Select
+                      style={{ maxWidth: 500 }}
                       value={selectedModel}
-                      onChange={e => setSelectedModel(e.target.value)}
+                      onChange={setSelectedModel}
                     >
                       {supportedModels.map(model => (
-                        <option key={model.value} value={model.value}>
+                        <Select.Option key={model.value} value={model.value}>
                           {model.name}
-                        </option>
+                        </Select.Option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.apiKey')}:</label>
-                    <input
+                    <Input.Password
                       style={{
-                        width: '100%',
-                        padding: 8,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
+                        maxWidth: 500,
                       }}
                       placeholder={t('settings.apiKeyPlaceholder')}
-                      type="password"
                       value={apiKey}
                       onChange={e => setApiKey(e.target.value)}
                     />
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: 8 }}>{t('settings.apiUrl')}:</label>
-                    <input
-                      style={{
-                        width: '100%',
-                        padding: 8,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 4,
-                      }}
+                    <Input
+                      style={{ maxWidth: 500 }}
                       value={apiUrl}
                       onChange={e => setApiUrl(e.target.value)}
                     />
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      style={{
-                        background: loading ? '#d9d9d9' : '#1890ff',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: 4,
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                      }}
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      loading={loading}
                       onClick={saveAIConfig}
-                      disabled={loading}
                     >
-                      {loading ? t('settings.saving') : t('settings.save')}
-                    </button>
-                    <button
-                      style={{
-                        background: testing ? '#d9d9d9' : '#52c41a',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: 4,
-                        cursor: testing ? 'not-allowed' : 'pointer',
-                      }}
+                      {t('settings.save')}
+                    </Button>
+                    <Button
+                      icon={<ExperimentOutlined />}
+                      loading={testing}
                       onClick={testConnection}
-                      disabled={testing || !apiKey}
+                      disabled={!apiKey}
                     >
-                      {testing ? t('settings.testing') : t('settings.test')}
-                    </button>
+                      {t('settings.test')}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -272,7 +249,7 @@ const SettingsPage: React.FC = () => {
                     </label>
                   </div>
                   <div>
-                    <Button icon={<Wrench size={16} />} onClick={() => setShowToolStatus(true)}>
+                    <Button icon={<ToolOutlined />} onClick={() => setShowToolStatus(true)}>
                       {t('settings.checkTools')}
                     </Button>
                   </div>

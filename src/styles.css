@@ -116,6 +116,25 @@ body {
 .dark .ant-layout-sider-trigger {
   background: #262626 !important;
   color: #e8e8e8 !important;
+  border-top: 1px solid #434343 !important;
+}
+
+/* 修复黑夜模式下收起箭头的颜色 */
+.dark .ant-layout-sider-trigger svg {
+  color: #e8e8e8 !important;
+  fill: #e8e8e8 !important;
+}
+
+/* 黑夜模式下侧边栏触发器悬停效果 */
+.dark .ant-layout-sider-trigger:hover {
+  background: #303030 !important;
+  color: #ffffff !important;
+  border-top: 1px solid #595959 !important;
+}
+
+.dark .ant-layout-sider-trigger:hover svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 .dark .ant-layout-content {
@@ -241,6 +260,25 @@ body {
   background: #fff !important;
   color: rgba(0, 0, 0, 0.88) !important;
   border-top: 1px solid #f0f0f0 !important;
+}
+
+/* 修复白天模式下收起图标的颜色 */
+.ant-layout-sider-light .ant-layout-sider-trigger svg {
+  color: rgba(0, 0, 0, 0.88) !important;
+  fill: rgba(0, 0, 0, 0.88) !important;
+}
+
+/* 确保收起按钮箭头在不同模式下的颜色正确 */
+.ant-layout-sider-trigger .anticon {
+  color: inherit !important;
+}
+
+.ant-layout-sider-light .ant-layout-sider-trigger .anticon svg {
+  fill: rgba(0, 0, 0, 0.88) !important;
+}
+
+.ant-layout-sider-dark .ant-layout-sider-trigger .anticon svg {
+  fill: #e8e8e8 !important;
 }
 
 /* 确保菜单项的文字在所有状态下都可见 */
@@ -444,6 +482,19 @@ body {
 .dark .ant-btn-primary:hover {
   background: #1890ff;
   border-color: #1890ff;
+}
+
+/* 修复黑夜模式下按钮加载动画 */
+.dark .ant-btn-loading-icon {
+  color: inherit !important;
+}
+
+.dark .ant-btn-primary .ant-btn-loading-icon .anticon svg {
+  fill: #fff !important;
+}
+
+.dark .ant-btn .ant-btn-loading-icon .anticon {
+  animation: loadingCircle 1s infinite linear;
 }
 
 /* 模态框样式 */

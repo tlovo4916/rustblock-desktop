@@ -1,7 +1,7 @@
 /* 黑夜模式强制覆盖样式 */
 
 /* 修复所有可能的白色背景 */
-.dark *:not(.ant-switch):not(.ant-switch-handle):not(.ant-btn-primary) {
+.dark *:not(.ant-switch):not(.ant-switch-handle):not(.ant-btn-primary):not(.status-dot) {
   background-color: inherit !important;
 }
 
@@ -188,11 +188,23 @@ html:not(.dark) .ant-switch-checked {
 .dark .ant-layout-sider-trigger {
   background: #262626 !important;
   color: #e8e8e8 !important;
+  border-top: 1px solid #434343 !important;
 }
 
 .dark .ant-layout-sider-trigger:hover {
-  background: #2f2f2f !important;
+  background: #303030 !important;
   color: #ffffff !important;
+  border-top: 1px solid #595959 !important;
+}
+
+.dark .ant-layout-sider-trigger svg {
+  color: #e8e8e8 !important;
+  fill: #e8e8e8 !important;
+}
+
+.dark .ant-layout-sider-trigger:hover svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 /* 白天模式菜单文字修复 */

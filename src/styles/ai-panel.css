@@ -171,6 +171,23 @@
   background: #262626;
 }
 
+/* 优化代码块在黑夜模式下的样式 */
+.dark .markdown-content pre {
+  background: #1f1f1f !important;
+  border: 1px solid #303030 !important;
+}
+
+.dark .markdown-content pre code {
+  background: transparent !important;
+  color: #e8e8e8 !important;
+}
+
+.dark .markdown-content code {
+  background: #262626 !important;
+  border: 1px solid #303030 !important;
+  color: #e8e8e8 !important;
+}
+
 /* TextArea样式优化 */
 .ant-input-textarea-allow-clear .ant-input-clear-icon {
   margin-top: 4px;
@@ -235,4 +252,41 @@
 
 .dark-mode .ant-layout-sider::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* AI面板顶部工具栏的Select样式 */
+.ant-layout-sider .ant-select-selector {
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .ant-layout-sider .ant-select-selector {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ant-layout-sider .ant-select:hover .ant-select-selector {
+  border-color: #40a9ff !important;
+}
+
+.ant-layout-sider .ant-select-focused .ant-select-selector {
+  border-color: #40a9ff !important;
+  box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2) !important;
+}
+
+/* 修复黑夜模式下按钮加载动画 */
+.ant-layout-sider-dark .ant-btn-loading-icon {
+  color: #fff !important;
+}
+
+.ant-layout-sider-dark .ant-btn-primary.ant-btn-loading::before {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 确保加载图标在黑夜模式下可见 */
+.dark .ant-btn-loading-icon .anticon-loading {
+  color: inherit !important;
+}
+
+.dark .ant-spin-dot-item {
+  background-color: #1890ff !important;
 }
