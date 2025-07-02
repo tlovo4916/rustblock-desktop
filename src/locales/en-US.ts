@@ -258,4 +258,12 @@ export const enUS = {
     lightTheme: 'Light',
     darkTheme: 'Dark',
   },
+  
+  // Error Handling
+  error: {
+    pageError: 'Page Error',
+    pageErrorDesc: 'An error occurred in the {page} page',
+    reload: 'Reload',
+    goHome: 'Go Home',
+  },
 };

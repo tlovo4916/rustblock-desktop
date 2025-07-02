@@ -258,4 +258,12 @@ export const zhCN = {
     lightTheme: '浅色',
     darkTheme: '深色',
   },
+  
+  // 错误处理
+  error: {
+    pageError: '页面出错了',
+    pageErrorDesc: '{page} 页面遇到了错误',
+    reload: '重新加载',
+    goHome: '返回首页',
+  },
 };

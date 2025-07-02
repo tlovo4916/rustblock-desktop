@@ -8,6 +8,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import AIIcon from './AIIcon';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { apiKeyStorage } from '../utils/secureStorage';
+import { validateAIMessage, sanitizeAIResponse } from '../utils/inputValidation';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -97,15 +99,12 @@ const AISidePanel: React.FC = () => {
 
   // 加载API配置和历史会话
   useEffect(() => {
-    const loadConfig = () => {
+    const loadConfig = async () => {
       const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
       const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
       
-      // 加载所有提供商的API密钥
-      const keys: Record<string, string> = {
-        deepseek: localStorage.getItem('deepseek_api_key') || '',
-        openai: localStorage.getItem('openai_api_key') || '',
-      };
+      // 从安全存储加载所有提供商的API密钥
+      const keys = await apiKeyStorage.getAllApiKeys();
       setProviderKeys(keys);
       
       // 根据当前模型设置对应的API密钥
@@ -294,9 +293,16 @@ const AISidePanel: React.FC = () => {
       return;
     }
 
+    // 验证和清理用户输入
+    const validationResult = validateAIMessage(inputValue);
+    if (!validationResult.isValid) {
+      message.error(validationResult.errors.join(' '));
+      return;
+    }
+
     const userMessage: Message = {
       role: 'user',
-      content: inputValue,
+      content: validationResult.sanitized,
       timestamp: new Date(),
     };
 
@@ -313,7 +319,7 @@ const AISidePanel: React.FC = () => {
           content: t('ai.systemPrompt'),
         },
         ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: inputValue },
+        { role: 'user', content: validationResult.sanitized },
       ];
 
       const response = await safeInvoke<string>('chat_with_ai_generic', {
@@ -325,10 +331,13 @@ const AISidePanel: React.FC = () => {
 
       setLoading(false);
 
-      typeWriterEffect(response, () => {
+      // 清理AI响应内容
+      const sanitizedResponse = sanitizeAIResponse(response);
+
+      typeWriterEffect(sanitizedResponse, () => {
         const assistantMessage: Message = {
           role: 'assistant',
-          content: response,
+          content: sanitizedResponse,
           timestamp: new Date(),
         };
         const updatedMessages = [...messages, userMessage, assistantMessage];

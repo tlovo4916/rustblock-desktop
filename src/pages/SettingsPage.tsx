@@ -8,6 +8,9 @@ import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { apiKeyStorage } from '../utils/secureStorage';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { validateApiKey, validateUrl } from '../utils/inputValidation';
 
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
@@ -35,24 +38,28 @@ const SettingsPage: React.FC = () => {
 
   // 从localStorage加载配置
   useEffect(() => {
-    const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
-    
-    // 加载所有提供商的API密钥
-    const keys: Record<string, string> = {
-      deepseek: localStorage.getItem('deepseek_api_key') || '',
-      openai: localStorage.getItem('openai_api_key') || '',
+    const loadConfig = async () => {
+      // 首次运行时迁移旧的API密钥
+      await apiKeyStorage.migrateFromLocalStorage();
+      
+      const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
+      
+      // 从安全存储加载所有提供商的API密钥
+      const keys = await apiKeyStorage.getAllApiKeys();
+      setProviderKeys(keys);
+      
+      // 根据选择的模型设置对应的API密钥和URL
+      const model = supportedModels.find(m => m.value === savedModel);
+      if (model) {
+        const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
+        setApiKey(keys[provider] || '');
+        setApiUrl(model.baseUrl);
+      }
+      
+      setSelectedModel(savedModel);
     };
-    setProviderKeys(keys);
     
-    // 根据选择的模型设置对应的API密钥和URL
-    const model = supportedModels.find(m => m.value === savedModel);
-    if (model) {
-      const provider = model.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
-      setApiKey(keys[provider] || '');
-      setApiUrl(model.baseUrl);
-    }
-    
-    setSelectedModel(savedModel);
+    loadConfig();
   }, []);
 
   // 当选择模型改变时，更新API URL和加载对应的API密钥
@@ -74,36 +81,50 @@ const SettingsPage: React.FC = () => {
       return;
     }
 
+    // 验证API密钥格式
+    const apiKeyValidation = validateApiKey(apiKey);
+    if (!apiKeyValidation.isValid) {
+      message.error(apiKeyValidation.errors.join(' '));
+      return;
+    }
+
+    // 验证API URL格式
+    const urlValidation = validateUrl(apiUrl);
+    if (!urlValidation.isValid) {
+      message.error(urlValidation.errors.join(' '));
+      return;
+    }
+
     setLoading(true);
     try {
       // 根据当前选择的模型确定提供商
       const model = supportedModels.find(m => m.value === selectedModel);
       const provider = model?.baseUrl.includes('deepseek') ? 'deepseek' : 'openai';
       
-      // 保存到对应提供商的存储键
-      localStorage.setItem(`${provider}_api_key`, apiKey);
+      // 保存到安全存储（使用验证后的清理版本）
+      await apiKeyStorage.setApiKey(provider as 'deepseek' | 'openai', apiKeyValidation.sanitized);
       
-      // 更新内存中的提供商密钥
-      setProviderKeys(prev => ({ ...prev, [provider]: apiKey }));
+      // 更新内存中的提供商密钥（使用验证后的清理版本）
+      setProviderKeys(prev => ({ ...prev, [provider]: apiKeyValidation.sanitized }));
       
-      // 保存当前选择的模型和URL
+      // 保存当前选择的模型和URL（这些不是敏感信息，可以继续使用localStorage）
       localStorage.setItem('ai_model', selectedModel);
-      localStorage.setItem('ai_api_url', apiUrl);
+      localStorage.setItem('ai_api_url', urlValidation.sanitized);
       
       // 保持向后兼容
       if (provider === 'deepseek') {
-        localStorage.setItem('deepseek_api_url', apiUrl);
+        localStorage.setItem('deepseek_api_url', urlValidation.sanitized);
       }
 
       // 触发一个自定义事件，让其他组件知道配置已更新
       window.dispatchEvent(
         new CustomEvent('ai-config-updated', {
           detail: { 
-            apiKey, 
-            apiUrl, 
+            apiKey: apiKeyValidation.sanitized, 
+            apiUrl: urlValidation.sanitized, 
             model: selectedModel,
             provider,
-            providerKeys 
+            providerKeys: { ...providerKeys, [provider]: apiKeyValidation.sanitized }
           },
         })
       );
@@ -124,11 +145,25 @@ const SettingsPage: React.FC = () => {
       return;
     }
 
+    // 验证API密钥格式
+    const apiKeyValidation = validateApiKey(apiKey);
+    if (!apiKeyValidation.isValid) {
+      message.error(apiKeyValidation.errors.join(' '));
+      return;
+    }
+
+    // 验证API URL格式
+    const urlValidation = validateUrl(apiUrl);
+    if (!urlValidation.isValid) {
+      message.error(urlValidation.errors.join(' '));
+      return;
+    }
+
     setTesting(true);
     try {
       const isConnected = await safeInvoke<boolean>('test_ai_connection', {
-        apiKey,
-        apiUrl,
+        apiKey: apiKeyValidation.sanitized,
+        apiUrl: urlValidation.sanitized,
         model: selectedModel,
       });
 
@@ -190,22 +225,26 @@ const SettingsPage: React.FC = () => {
                     />
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <Button
-                      type="primary"
-                      icon={<SaveOutlined />}
-                      loading={loading}
-                      onClick={saveAIConfig}
-                    >
-                      {t('settings.save')}
-                    </Button>
-                    <Button
-                      icon={<ExperimentOutlined />}
-                      loading={testing}
-                      onClick={testConnection}
-                      disabled={!apiKey}
-                    >
-                      {t('settings.test')}
-                    </Button>
+                    <ErrorBoundary isolate>
+                      <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
+                        loading={loading}
+                        onClick={saveAIConfig}
+                      >
+                        {t('settings.save')}
+                      </Button>
+                    </ErrorBoundary>
+                    <ErrorBoundary isolate>
+                      <Button
+                        icon={<ExperimentOutlined />}
+                        loading={testing}
+                        onClick={testConnection}
+                        disabled={!apiKey}
+                      >
+                        {t('settings.test')}
+                      </Button>
+                    </ErrorBoundary>
                   </div>
                 </div>
               </div>
@@ -306,7 +345,17 @@ const SettingsPage: React.FC = () => {
           </TabPane>
 
           <TabPane tab={t('settings.performance')} key="performance">
-            <PerformanceMonitor />
+            <ErrorBoundary 
+              isolate
+              fallback={
+                <div style={{ padding: 32, textAlign: 'center' }}>
+                  <h4 style={{ color: '#ff4d4f' }}>性能监控加载失败</h4>
+                  <p>无法加载性能监控组件，请刷新页面重试。</p>
+                </div>
+              }
+            >
+              <PerformanceMonitor />
+            </ErrorBoundary>
           </TabPane>
         </Tabs>
       </Card>
@@ -322,7 +371,17 @@ const SettingsPage: React.FC = () => {
         style={{ height: '600px' }}
         bodyStyle={{ height: '500px', padding: 0 }}
       >
-        <ToolStatus />
+        <ErrorBoundary 
+          isolate
+          fallback={
+            <div style={{ padding: 32, textAlign: 'center' }}>
+              <h4 style={{ color: '#ff4d4f' }}>工具状态加载失败</h4>
+              <p>无法加载工具状态信息。</p>
+            </div>
+          }
+        >
+          <ToolStatus />
+        </ErrorBoundary>
       </Modal>
     </PageContainer>
   );

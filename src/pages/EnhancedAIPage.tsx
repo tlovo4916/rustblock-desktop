@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { safeInvoke } from '../utils/tauri';
 import { useTranslation } from '../contexts/LocaleContext';
+import { apiKeyStorage } from '../utils/secureStorage';
+import { validateAIMessage, sanitizeAIResponse } from '../utils/inputValidation';
 import {
   Card,
   Tabs,
@@ -133,15 +135,12 @@ const EnhancedAIPage: React.FC = () => {
 
   // 加载统一的API配置
   useEffect(() => {
-    const loadConfig = () => {
+    const loadConfig = async () => {
       const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
       const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
       
-      // 加载所有提供商的API密钥
-      const keys: Record<string, string> = {
-        deepseek: localStorage.getItem('deepseek_api_key') || '',
-        openai: localStorage.getItem('openai_api_key') || '',
-      };
+      // 从安全存储加载所有提供商的API密钥
+      const keys = await apiKeyStorage.getAllApiKeys();
       setProviderKeys(keys);
       
       // 根据当前模型设置对应的API密钥
@@ -185,6 +184,13 @@ const EnhancedAIPage: React.FC = () => {
       return;
     }
 
+    // 验证和清理代码输入
+    const validationResult = validateAIMessage(codeToOptimize);
+    if (!validationResult.isValid) {
+      message.error(validationResult.errors.join(' '));
+      return;
+    }
+
     setLoading(true);
     try {
       const messages = [
@@ -195,7 +201,7 @@ const EnhancedAIPage: React.FC = () => {
         },
         {
           role: 'user',
-          content: `请优化以下代码，让它更易读、更符合最佳实践，适合儿童学习：\n\n${codeToOptimize}\n\n请提供：1. 优化后的代码 2. 具体的改进建议`,
+          content: `请优化以下代码，让它更易读、更符合最佳实践，适合儿童学习：\n\n${validationResult.sanitized}\n\n请提供：1. 优化后的代码 2. 具体的改进建议`,
         },
       ];
 
@@ -206,13 +212,16 @@ const EnhancedAIPage: React.FC = () => {
         messages,
       });
 
+      // 清理AI响应内容
+      const sanitizedResponse = sanitizeAIResponse(response);
+      
       // 简单解析响应，分离代码和建议
-      const parts = response.split('改进建议');
+      const parts = sanitizedResponse.split('改进建议');
       if (parts.length > 1) {
         setOptimizedCode(parts[0].replace(/优化后的代码[：:]/g, '').trim());
         setOptimizationSuggestions([parts[1].trim()]);
       } else {
-        setOptimizedCode(response);
+        setOptimizedCode(sanitizedResponse);
         setOptimizationSuggestions(['代码已优化']);
       }
 
@@ -251,10 +260,13 @@ const EnhancedAIPage: React.FC = () => {
         messages,
       });
 
+      // 清理AI响应内容
+      const sanitizedResponse = sanitizeAIResponse(response);
+
       // 创建一个简化的学习路径对象
       const mockLearningPath: LearningPath = {
         title: `${studentAge}岁${skillLevel}编程学习路径`,
-        description: response.split('\n')[0] || '个性化编程学习计划',
+        description: sanitizedResponse.split('\n')[0] || '个性化编程学习计划',
         estimated_time: '4-6周',
         difficulty: skillLevel,
         steps: [

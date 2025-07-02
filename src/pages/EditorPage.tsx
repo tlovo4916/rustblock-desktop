@@ -7,6 +7,7 @@ import { safeInvoke } from '../components/MockBackend';
 import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const { Option } = Select;
 
@@ -170,11 +171,21 @@ const EditorPage: React.FC = () => {
       </Card>
 
       <Card style={{ minHeight: 'calc(100vh - 250px)' }}>
-        <BlocklyWorkspace
-          selectedDevice={selectedDevice}
-          onCodeGenerated={handleCodeGenerated}
-          onUploadCode={handleUploadCode}
-        />
+        <ErrorBoundary 
+          isolate
+          fallback={
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              <h3 style={{ color: '#ff4d4f' }}>编辑器加载失败</h3>
+              <p>代码编辑器遇到了错误，请刷新页面重试。</p>
+            </div>
+          }
+        >
+          <BlocklyWorkspace
+            selectedDevice={selectedDevice}
+            onCodeGenerated={handleCodeGenerated}
+            onUploadCode={handleUploadCode}
+          />
+        </ErrorBoundary>
       </Card>
 
       {/* 上传进度对话框 */}

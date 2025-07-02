@@ -1,9 +1,10 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
   plugins: [
     react(),
   ],
@@ -16,6 +17,18 @@ export default defineConfig(async () => ({
       '@pages': resolve(__dirname, 'src/pages'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@types': resolve(__dirname, 'src/types'),
+      '@contexts': resolve(__dirname, 'src/contexts'),
+    },
+  },
+
+  // Test configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'src/test/'],
     },
   },
 
@@ -38,7 +51,7 @@ export default defineConfig(async () => ({
           'utils': ['styled-components'],
         },
         // 优化chunk命名
-        chunkFileNames: (chunkInfo) => {
+        chunkFileNames: (chunkInfo: any) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
           return `js/${facadeModuleId}-[hash].js`;
         },
@@ -59,6 +72,9 @@ export default defineConfig(async () => ({
       },
     },
   },
+
+  // Prevent vite from obscuring rust errors
+  clearScreen: false,
 
   // Development server configuration
   server: {
@@ -98,18 +114,4 @@ export default defineConfig(async () => ({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
-
-  // Prevent vite from obscuring rust errors
-  clearScreen: false,
-
-  // Testing configuration
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    coverage: {
-      reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'src/test/'],
-    },
-  },
-})); 
+}); 

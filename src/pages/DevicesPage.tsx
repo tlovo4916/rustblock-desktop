@@ -5,6 +5,8 @@ import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
 import { useDevice } from '../contexts/DeviceContext';
+import ErrorBoundary from '../components/ErrorBoundary';
+import DeviceOperationErrorBoundary from '../components/DeviceOperationErrorBoundary';
 // import SerialMonitor from '../components/SerialMonitor';
 // import DeviceConfiguration from '../components/DeviceConfiguration';
 
@@ -381,35 +383,39 @@ const DevicesPage: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <button
-            onClick={scanDevices}
-            disabled={loading}
-            style={{
-              background: loading ? '#d9d9d9' : '#1890ff',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: 4,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? `🔄 ${t('devices.scanning')}` : `🔍 ${t('devices.scanDevices')}`}
-          </button>
+          <DeviceOperationErrorBoundary operationName="扫描设备">
+            <button
+              onClick={scanDevices}
+              disabled={loading}
+              style={{
+                background: loading ? '#d9d9d9' : '#1890ff',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: 4,
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? `🔄 ${t('devices.scanning')}` : `🔍 ${t('devices.scanDevices')}`}
+            </button>
+          </DeviceOperationErrorBoundary>
 
-          <button
-            onClick={refreshAllDevices}
-            disabled={loading}
-            style={{
-              background: loading ? '#d9d9d9' : '#52c41a',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: 4,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? `🔄 ${t('devices.refreshing')}` : `🔄 ${t('devices.refreshAll')}`}
-          </button>
+          <DeviceOperationErrorBoundary operationName="刷新设备">
+            <button
+              onClick={refreshAllDevices}
+              disabled={loading}
+              style={{
+                background: loading ? '#d9d9d9' : '#52c41a',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: 4,
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? `🔄 ${t('devices.refreshing')}` : `🔄 ${t('devices.refreshAll')}`}
+            </button>
+          </DeviceOperationErrorBoundary>
 
           {devices.length > 0 && (
             <span style={{ color: '#52c41a', fontSize: 14 }}>✅ {t('devices.foundDevices').replace('{count}', devices.length.toString())}</span>
@@ -432,8 +438,17 @@ const DevicesPage: React.FC = () => {
         )}
 
         <h3>{t('devices.detectedDevices')}</h3>
-        <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-          {devices.length === 0 ? (
+        <ErrorBoundary 
+          isolate
+          fallback={
+            <div style={{ padding: 32, textAlign: 'center', color: '#ff4d4f' }}>
+              <h4>设备列表加载失败</h4>
+              <p>无法显示设备列表，请刷新页面重试。</p>
+            </div>
+          }
+        >
+          <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
+            {devices.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32, color: '#8c8c8c' }}>
               <p>📱 {t('devices.noDevices')}</p>
               <p>{t('devices.noDevicesDesc')}</p>
@@ -662,45 +677,11 @@ const DevicesPage: React.FC = () => {
                     {/* 操作按钮 */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {!driverInstalled && device.device_type !== 'Unknown' && (
-                        <button
-                          onClick={() => installDriver(device.id)}
-                          style={{
-                            background: '#ff4d4f',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            fontSize: 12,
-                          }}
-                        >
-                          🔧 {t('devices.installDriver')}
-                        </button>
-                      )}
-
-                      {driverInstalled && !isConnected && device.device_type !== 'Unknown' && (
-                        <button
-                          onClick={() => connectDevice(device.id)}
-                          style={{
-                            background: '#1890ff',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            fontSize: 12,
-                          }}
-                        >
-                          🔗 {t('devices.connect')}
-                        </button>
-                      )}
-
-                      {isConnected && device.device_type !== 'Unknown' && (
-                        <>
+                        <DeviceOperationErrorBoundary operationName="安装驱动">
                           <button
-                            onClick={() => disconnectDevice(device.id)}
+                            onClick={() => installDriver(device.id)}
                             style={{
-                              background: '#ff7875',
+                              background: '#ff4d4f',
                               color: 'white',
                               border: 'none',
                               padding: '6px 12px',
@@ -709,8 +690,48 @@ const DevicesPage: React.FC = () => {
                               fontSize: 12,
                             }}
                           >
-                            🔌 {t('devices.disconnect')}
+                            🔧 {t('devices.installDriver')}
                           </button>
+                        </DeviceOperationErrorBoundary>
+                      )}
+
+                      {driverInstalled && !isConnected && device.device_type !== 'Unknown' && (
+                        <DeviceOperationErrorBoundary operationName="连接设备">
+                          <button
+                            onClick={() => connectDevice(device.id)}
+                            style={{
+                              background: '#1890ff',
+                              color: 'white',
+                              border: 'none',
+                              padding: '6px 12px',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 12,
+                            }}
+                          >
+                            🔗 {t('devices.connect')}
+                          </button>
+                        </DeviceOperationErrorBoundary>
+                      )}
+
+                      {isConnected && device.device_type !== 'Unknown' && (
+                        <>
+                          <DeviceOperationErrorBoundary operationName="断开设备">
+                            <button
+                              onClick={() => disconnectDevice(device.id)}
+                              style={{
+                                background: '#ff7875',
+                                color: 'white',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: 4,
+                                cursor: 'pointer',
+                                fontSize: 12,
+                              }}
+                            >
+                              🔌 {t('devices.disconnect')}
+                            </button>
+                          </DeviceOperationErrorBoundary>
 
                           <button
                             onClick={() => openSerialMonitor(device.id)}
@@ -767,6 +788,7 @@ const DevicesPage: React.FC = () => {
             </div>
           )}
         </div>
+      </ErrorBoundary>
 
         <div style={{ marginTop: 32 }}>
           <h3>{t('devices.supportedDevices')}</h3>

@@ -5,8 +5,19 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }));
 
+// Mock logger
+vi.mock('@utils/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 import { safeInvoke } from '@utils/tauri';
 import { invoke } from '@tauri-apps/api/core';
+import { logger } from '@utils/logger';
 
 const mockInvoke = vi.mocked(invoke);
 
@@ -33,7 +44,6 @@ describe('safeInvoke', () => {
   });
 
   it('logs errors to console', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const mockError = new Error('Test error');
     mockInvoke.mockRejectedValueOnce(mockError);
 
@@ -43,12 +53,10 @@ describe('safeInvoke', () => {
       // Expected to throw
     }
 
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       "Tauri invoke error for command 'test-command':",
       mockError
     );
-
-    consoleSpy.mockRestore();
   });
 
   it('works without arguments', async () => {

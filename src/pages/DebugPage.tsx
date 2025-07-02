@@ -5,6 +5,7 @@ import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
 import { Card, Tabs, Switch, Button, message, Typography, Space, Divider } from 'antd';
 import { logger } from '../utils/logger';
+import { apiKeyStorage } from '../utils/secureStorage';
 
 const { TabPane } = Tabs;
 const { Text, Title } = Typography;
@@ -60,8 +61,8 @@ const DebugPage: React.FC = () => {
 
   const testDeepSeekConnection = async () => {
     try {
-      // 使用一个测试 API 密钥
-      const testApiKey = localStorage.getItem('deepseek_api_key') || 'test-key';
+      // 从安全存储获取API密钥
+      const testApiKey = (await apiKeyStorage.getApiKey('deepseek')) || 'test-key';
       const testApiUrl = localStorage.getItem('deepseek_api_url') || 'https://api.deepseek.com';
 
       setResult('Testing DeepSeek connection...');

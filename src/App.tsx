@@ -22,6 +22,7 @@ import { DeviceStatusIndicator } from "./components/DeviceStatusIndicator";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import enUS from "antd/locale/en_US";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./styles.css";
 import "./styles/dark-override.css";
 import "./styles/ai-panel.css";
@@ -33,6 +34,7 @@ const DebugPage = lazy(() => import("./pages/DebugPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DevicesPage = lazy(() => import("./pages/DevicesPage"));
 const AISidePanel = lazy(() => import("./components/AISidePanel"));
+const PageErrorBoundary = lazy(() => import("./components/PageErrorBoundary"));
 
 const { Content, Sider, Header } = Layout;
 
@@ -110,22 +112,24 @@ const App: React.FC = () => {
   const renderContent = () => {
     return (
       <Suspense fallback={<PageLoader />}>
-        {(() => {
-          switch (currentPage) {
-            case "home":
-              return <HomePage />;
-            case "editor":
-              return <EditorPage />;
-            case "debug":
-              return <DebugPage />;
-            case "devices":
-              return <DevicesPage />;
-            case "settings":
-              return <SettingsPage />;
-            default:
-              return <HomePage />;
-          }
-        })()}
+        <PageErrorBoundary pageName={currentPage}>
+          {(() => {
+            switch (currentPage) {
+              case "home":
+                return <HomePage />;
+              case "editor":
+                return <EditorPage />;
+              case "debug":
+                return <DebugPage />;
+              case "devices":
+                return <DevicesPage />;
+              case "settings":
+                return <SettingsPage />;
+              default:
+                return <HomePage />;
+            }
+          })()}
+        </PageErrorBoundary>
       </Suspense>
     );
   };
@@ -194,9 +198,11 @@ const App: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <DeviceStatusIndicator 
-              onClick={() => setCurrentPage('devices')}
-            />
+            <ErrorBoundary isolate>
+              <DeviceStatusIndicator 
+                onClick={() => setCurrentPage('devices')}
+              />
+            </ErrorBoundary>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Tooltip 
@@ -273,9 +279,19 @@ const App: React.FC = () => {
             </Tooltip>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <Suspense fallback={<div style={{ padding: 20, textAlign: 'center' }}><Spin /></div>}>
-              <AISidePanel />
-            </Suspense>
+            <ErrorBoundary 
+              isolate 
+              fallback={
+                <div style={{ padding: 20, textAlign: 'center' }}>
+                  <h3 style={{ color: '#ff4d4f' }}>AI Assistant Error</h3>
+                  <p>The AI assistant encountered an error. Please try refreshing the page.</p>
+                </div>
+              }
+            >
+              <Suspense fallback={<div style={{ padding: 20, textAlign: 'center' }}><Spin /></div>}>
+                <AISidePanel />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
       </Sider>

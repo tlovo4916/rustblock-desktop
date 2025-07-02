@@ -5,6 +5,8 @@ import { logger } from '../utils/logger';
 import PageContainer from '../components/PageContainer';
 import { useTranslation } from '../contexts/LocaleContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { apiKeyStorage } from '../utils/secureStorage';
+import { validateAIMessage, sanitizeAIResponse } from '../utils/inputValidation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,20 +38,19 @@ const AIPage: React.FC = () => {
   const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
   const [typingContent, setTypingContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [inputError, setInputError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   // 加载API配置
   useEffect(() => {
-    const loadConfig = () => {
+    const loadConfig = async () => {
       const savedModel = localStorage.getItem('ai_model') || 'deepseek-chat';
       const savedApiUrl = localStorage.getItem('ai_api_url') || 'https://api.deepseek.com';
       
-      // 加载所有提供商的API密钥
-      const keys: Record<string, string> = {
-        deepseek: localStorage.getItem('deepseek_api_key') || '',
-        openai: localStorage.getItem('openai_api_key') || '',
-      };
+      // 从安全存储加载所有提供商的API密钥
+      const keys = await apiKeyStorage.getAllApiKeys();
       setProviderKeys(keys);
       
       // 根据当前模型设置对应的API密钥
@@ -76,6 +77,7 @@ const AIPage: React.FC = () => {
     window.addEventListener('ai-config-updated', handleConfigUpdate);
 
     return () => {
+      isMountedRef.current = false;
       window.removeEventListener('ai-config-updated', handleConfigUpdate);
       // 清理打字效果定时器
       if (typingTimeoutRef.current) {
@@ -91,11 +93,19 @@ const AIPage: React.FC = () => {
 
   // 打字机效果函数
   const typeWriterEffect = (text: string, onComplete: () => void) => {
+    // 清理之前的打字效果
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    
     setIsTyping(true);
     setTypingContent('');
     let index = 0;
 
     const typeNext = () => {
+      if (!isMountedRef.current) return;
+      
       if (index < text.length) {
         setTypingContent(prev => prev + text[index]);
         index++;
@@ -118,9 +128,18 @@ const AIPage: React.FC = () => {
       return;
     }
 
+    // 验证和清理用户输入
+    const validationResult = validateAIMessage(inputValue);
+    if (!validationResult.isValid) {
+      setInputError(validationResult.errors.join(' '));
+      message.error(validationResult.errors.join(' '));
+      return;
+    }
+    setInputError('');
+
     const userMessage: Message = {
       role: 'user',
-      content: inputValue,
+      content: validationResult.sanitized,
       timestamp: new Date(),
     };
 
@@ -138,7 +157,7 @@ const AIPage: React.FC = () => {
         },
         // 只保留最近5条消息历史
         ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: inputValue },
+        { role: 'user', content: validationResult.sanitized },
       ];
 
       // 通过Tauri后端调用API
@@ -150,24 +169,33 @@ const AIPage: React.FC = () => {
         messages: chatMessages,
       });
 
-      setLoading(false);
-      setLoadingStatus('');
+      if (isMountedRef.current) {
+        setLoading(false);
+        setLoadingStatus('');
 
-      // 使用打字机效果显示响应
-      typeWriterEffect(response, () => {
-        const assistantMessage: Message = {
-          role: 'assistant',
-          content: response,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setTypingContent('');
-      });
+        // 使用打字机效果显示响应
+        // 清理AI响应内容
+        const sanitizedResponse = sanitizeAIResponse(response);
+        
+        typeWriterEffect(sanitizedResponse, () => {
+          if (!isMountedRef.current) return;
+          
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: sanitizedResponse,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+          setTypingContent('');
+        });
+      }
     } catch (error) {
-      logger.error(t('ai.sendFailed'), error);
-      message.error(`${t('ai.sendFailed')}: ${error}`);
-      setLoading(false);
-      setLoadingStatus('');
+      if (isMountedRef.current) {
+        logger.error(t('ai.sendFailed'), error);
+        message.error(`${t('ai.sendFailed')}: ${error}`);
+        setLoading(false);
+        setLoadingStatus('');
+      }
     }
   };
 
@@ -316,22 +344,41 @@ const AIPage: React.FC = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  border: `1px solid ${isDarkMode ? '#434343' : '#d9d9d9'}`,
-                  borderRadius: 4,
-                  background: isDarkMode ? '#262626' : '#fff',
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
-                }}
-                placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}
-                value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={!apiKey || loading}
-              />
+            <div>
+              {inputError && (
+                <div
+                  style={{
+                    color: '#ff4d4f',
+                    fontSize: 12,
+                    marginBottom: 8,
+                    padding: '4px 8px',
+                    background: isDarkMode ? 'rgba(255, 77, 79, 0.1)' : '#fff2f0',
+                    border: `1px solid ${isDarkMode ? 'rgba(255, 77, 79, 0.3)' : '#ffccc7'}`,
+                    borderRadius: 4,
+                  }}
+                >
+                  ⚠️ {inputError}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  style={{
+                    flex: 1,
+                    padding: 8,
+                    border: `1px solid ${inputError ? '#ff4d4f' : isDarkMode ? '#434343' : '#d9d9d9'}`,
+                    borderRadius: 4,
+                    background: isDarkMode ? '#262626' : '#fff',
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
+                  }}
+                  placeholder={apiKey ? t('ai.askQuestion') : t('ai.configureApiKeyFirst')}
+                  value={inputValue}
+                  onChange={e => {
+                    setInputValue(e.target.value);
+                    setInputError('');
+                  }}
+                  onKeyPress={handleKeyPress}
+                  disabled={!apiKey || loading}
+                />
               <button
                 style={{
                   background: !apiKey || loading ? '#d9d9d9' : '#1890ff',
@@ -346,6 +393,7 @@ const AIPage: React.FC = () => {
               >
                 {loading ? t('ai.sending') : t('ai.send')}
               </button>
+              </div>
             </div>
           </div>
 
